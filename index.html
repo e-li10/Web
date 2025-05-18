@@ -16,12 +16,7 @@
       position: fixed;
       top: 12px;
       right: 16px;
-      font: 14px/1.2 monospace;
-      background: rgba(0, 0, 0, 0.65);
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 6px;
-      z-index: 9999;
+      font-family: 'Cormorant Garamond', serif;
     }
   </style>
 </head>
@@ -38,7 +33,7 @@
   <div id="clock"></div>
 
   <script>
-    // 24-hour clock showing Eastern Time with EST/EDT
+    // 24-hour clock showing Eastern Time
     function formatET() {
       const now = new Date();
       const parts = new Intl.DateTimeFormat("en-US", {
@@ -47,16 +42,14 @@
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
-        timeZoneName: "short",
       }).formatToParts(now);
 
       const time = parts
-        .filter((p) => p.type !== "literal" && p.type !== "timeZoneName")
+        .filter((p) => p.type !== "literal")
         .map((p) => p.value)
         .join(":"); // HH:MM:SS
 
-      const tz = parts.find((p) => p.type === "timeZoneName").value; // EST or EDT
-      return `${time} ${tz}`;
+      return time;
     }
 
     function tick() {
