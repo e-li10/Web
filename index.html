@@ -3,49 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <title>Eric Li</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet" />
 
   <!-- Main stylesheet -->
   <link rel="stylesheet" href="style.css" />
-
-  <!-- Clock styling (tucked in the corner) -->
-  <style>
-    #clock {
-      position: fixed;
-      top: 12px;
-      right: 16px;
-      font: 14px/1.2 monospace;
-      background: rgba(0, 0, 0, 0.65);
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 6px;
-      z-index: 9999;
-    }
-  </style>
 </head>
 
 <body>
-  <h1>Eric Li</h1>
-
-  <nav>
-    <a href="/">Home</a>
-    <a href="/thoughts">Thoughts</a>
-  </nav>
+  <header>
+    <h1>Eric Li</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/thoughts">Thoughts</a>
+    </nav>
+  </header>
 
   <!-- Eastern-time clock -->
   <div id="clock"></div>
 
   <script>
-    // 24-hour clock showing Eastern Time with EST/EDT
-    function formatET() {
+    /**
+     * Paints a live 24-hour clock in Eastern Time (EST/EDT).
+     */
+    function updateClock() {
       const now = new Date();
-      const parts = new Intl.DateTimeFormat("en-US", {
+      const formatted = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/New_York",
         hour12: false,
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
-        timeZoneName: "short",
-      }).formatToParts(now);
+        timeZoneName: "short"
+      }).format(now);
+
+      document.getElementById("clock").textContent = formatted;
+    }
+
+    updateClock();               // initial paint
+    setInterval(updateClock, 1000); // refresh every second
+  </script>
+</body>
+</html>
