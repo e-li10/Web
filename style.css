@@ -1,32 +1,28 @@
-diff --git a/style.css b/style.css
-index e343134..0ea4aea 100644
---- a/style.css
-+++ b/style.css
 @@ -24,26 +24,27 @@ nav {
- }
- 
- nav a {
-   color: #222;
-   text-decoration: none;
- }
- 
- nav a:hover {
-   text-decoration: underline;
- }
- body{
-   opacity:0;
-   animation:fade 0.8s ease-out forwards;
- }
- @keyframes fade{ to{ opacity:1; } }
- 
- #clock {
-   position: fixed;      /* stays in the corner on scroll   */
-   top: 12px;
-   right: 16px;
-   font: 14px/1.2 monospace;
-   background: rgba(0,0,0,0.65);
-   color: #fff;
-   padding: 4px 10px;
-   border-radius: 6px;
-+  z-index: 9999;        /* ensure it stays above other elements */
- }
+}
+
+nav a {
+  color: #222;
+  text-decoration: none;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+body{
+  opacity:0;
+  animation:fade 0.8s ease-out forwards;
+}
+@keyframes fade{ to{ opacity:1; } }
+
+#clock {
+  position: fixed;      /* stays in the corner on scroll   */
+  top: 12px;
+  right: 16px;
+  font: 14px/1.2 monospace;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  z-index: 9999;        /* ensure it stays above other elements */
+}
