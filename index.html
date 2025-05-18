@@ -6,10 +6,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <!-- Main stylesheet -->
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Quick overrides & layout polish -->
+  <style>
+    :root {
+      --pad: 2rem;
+    }
+
+    body {
+      margin: 0;
+      padding: var(--pad);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.55;
+      opacity: 0;
+      animation: fade 0.8s ease-out forwards;
+    }
+
+    @keyframes fade { to { opacity: 1; } }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      margin: 0 0 1rem 0;
+    }
+
+    nav {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    nav a {
+      color: #222;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    /* Minimal corner clock */
+    #clock {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      font: 14px/1.2 monospace;
+      background: none;
+      color: #666;
+      padding: 0;
+      z-index: 9999;
+      pointer-events: none;
+    }
+  </style>
 </head>
 
 <body>
@@ -21,29 +74,23 @@
     </nav>
   </header>
 
-  <!-- Eastern-time clock -->
+  <!-- Live Eastern‑Time clock (24‑hour) -->
   <div id="clock"></div>
 
   <script>
-    /**
-     * Paints a live 24-hour clock in Eastern Time (EST/EDT).
-     */
     function updateClock() {
-      const now = new Date();
-      const formatted = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
+      const formatted = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
         hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        timeZoneName: "short"
-      }).format(now);
-
-      document.getElementById("clock").textContent = formatted;
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).format(new Date());
+      document.getElementById('clock').textContent = formatted;
     }
 
-    updateClock();               // initial paint
-    setInterval(updateClock, 1000); // refresh every second
+    updateClock();
+    setInterval(updateClock, 1000);
   </script>
 </body>
 </html>
