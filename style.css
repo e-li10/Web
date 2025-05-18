@@ -1,4 +1,8 @@
-@@ -24,26 +24,27 @@ nav {
+/* =========================
+   Global navigation
+   ========================= */
+nav {
+  /* add layout rules here if needed */
 }
 
 nav a {
@@ -9,20 +13,30 @@ nav a {
 nav a:hover {
   text-decoration: underline;
 }
-body{
-  opacity:0;
-  animation:fade 0.8s ease-out forwards;
-}
-@keyframes fade{ to{ opacity:1; } }
 
+/* =========================
+   Fade-in on page load
+   ========================= */
+body {
+  opacity: 0;
+  animation: fade 0.8s ease-out forwards;
+}
+
+@keyframes fade {
+  to { opacity: 1; }
+}
+
+/* =========================
+   Corner clock
+   ========================= */
 #clock {
-  position: fixed;      /* stays in the corner on scroll   */
+  position: fixed;   /* stays in the corner on scroll   */
   top: 12px;
   right: 16px;
   font: 14px/1.2 monospace;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0, 0, 0, 0.65);
   color: #fff;
   padding: 4px 10px;
   border-radius: 6px;
-  z-index: 9999;        /* ensure it stays above other elements */
+  z-index: 9999;     /* keep it above other elements   */
 }
