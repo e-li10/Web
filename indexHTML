@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eric Li</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrapper">
+    <!-- Swap this image whenever you like -->
+    <img src="placeholder.jpg" alt="Eric Li profile picture" class="avatar" width="160" height="160" />
+
+    <h1>Eric Li</h1>
+
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="thoughts.html">Thoughts</a>
+    </nav>
+  </main>
+</body>
+</html>
