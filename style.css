@@ -36,3 +36,14 @@ body{
   animation:fade 0.8s ease-out forwards;
 }
 @keyframes fade{ to{ opacity:1; } }
+
+#clock {
+  position: fixed;      /* stays in the corner on scroll   */
+  top: 12px;
+  right: 16px;
+  font: 14px/1.2 monospace;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
