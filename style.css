@@ -24,8 +24,8 @@ header { display: flex; flex-direction: column; align-items: center; }
 /* Headline */
 h1 {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 3.5rem;     /* bigger */
-  font-weight: 600;      /* bold */
+  font-size: 3.5rem;
+  font-weight: 600;
   margin: 0 0 1.2rem 0;
 }
 
@@ -35,7 +35,7 @@ nav { display: inline-flex; gap: 2rem; margin-bottom: 3.5rem; }
 nav a {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.35rem;
-  font-weight: 400;      /* not bold */
+  font-weight: 400;
   color: var(--text);
   text-decoration: none;
 }
