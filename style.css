@@ -1,4 +1,4 @@
-/* Use the same serif font as Othman’s page */
+/* Serif font */
 body {
   margin: 0;
   font-family: 'Cormorant Garamond', serif;
@@ -9,7 +9,7 @@ body {
   min-height: 100vh;               /* vertical centering */
 }
 
-/* Big, elegant name */
+/* Name */
 h1 {
   font-size: 4rem;                 /* ~64 px */
   font-weight: 600;
