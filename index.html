@@ -1,70 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Eric Li</title>
-
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet" />
-
-  <!-- Main stylesheet -->
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Clock styling (tucked in the corner) -->
-  <style>
-    #clock {
-      position: fixed;
-      top: 12px;
-      right: 16px;
-      font: 14px/1.2 monospace;
-      background: rgba(0, 0, 0, 0.65);
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 6px;
-      z-index: 9999;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>Eric Li</h1>
-
-  <nav>
-    <a href="/">Home</a>
-    <a href="/thoughts">Thoughts</a>
-  </nav>
-
-  <!-- Eastern-time clock -->
-  <div id="clock"></div>
-
-  <script>
-    // 24-hour clock showing Eastern Time with EST/EDT
-    function formatET() {
-      const now = new Date();
-      const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        timeZoneName: "short",
-      }).formatToParts(now);
-
-      const time = parts
-        .filter((p) => p.type !== "literal" && p.type !== "timeZoneName")
-        .map((p) => p.value)
-        .join(":"); // HH:MM:SS
-
-      const tz = parts.find((p) => p.type === "timeZoneName").value; // EST or EDT
-      return `${time} ${tz}`;
-    }
-
-    function tick() {
-      document.getElementById("clock").textContent = formatET();
-    }
-
-    tick();                  // initial paint
-    setInterval(tick, 1000); // update every second
-  </script>
-</body>
-</html>
+diff --git a/index.html b/index.html
+index 10d16a4..1af736d 100644
+--- a/index.html
++++ b/index.html
+@@ -1,51 +1,37 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+   <meta charset="UTF-8" />
+   <title>Eric Li</title>
+ 
+   <!-- Fonts -->
+   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet" />
+ 
+   <!-- Main stylesheet -->
+   <link rel="stylesheet" href="style.css" />
+ 
+-  <!-- Clock styling (tucked in the corner) -->
+-  <style>
+-    #clock {
+-      position: fixed;
+-      top: 12px;
+-      right: 16px;
+-      font: 14px/1.2 monospace;
+-      background: rgba(0, 0, 0, 0.65);
+-      color: #fff;
+-      padding: 4px 10px;
+-      border-radius: 6px;
+-      z-index: 9999;
+-    }
+-  </style>
+ </head>
+ 
+ <body>
+   <h1>Eric Li</h1>
+ 
+   <nav>
+     <a href="/">Home</a>
+     <a href="/thoughts">Thoughts</a>
+   </nav>
+ 
+   <!-- Eastern-time clock -->
+   <div id="clock"></div>
+ 
+   <script>
+     // 24-hour clock showing Eastern Time with EST/EDT
+     function formatET() {
+       const now = new Date();
+       const parts = new Intl.DateTimeFormat("en-US", {
+         timeZone: "America/New_York",
+         hour12: false,
+         hour: "2-digit",
+         minute: "2-digit",
+         second: "2-digit",
+         timeZoneName: "short",
+       }).formatToParts(now);
