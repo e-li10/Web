@@ -5,10 +5,12 @@
   <title>Eric Li</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Google Fonts -->
-<link rel="preload"
-      href="https://fonts.gstatic.com/s/cormorantgaramond/v21/*file*.woff2"
-      as="font" type="font/woff2" crossorigin>
+  <!-- 1. Pre-connect so the browser opens TLS early -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- 2. Google Fonts stylesheet (display=optional → no visible swap flash) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=optional" rel="stylesheet">
 
   <!-- Main stylesheet -->
   <link rel="stylesheet" href="style.css" />
