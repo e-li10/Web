@@ -1,6 +1,6 @@
 :root {
-  --pad: 2.5rem;     /* top/bottom breathing room  */
-  --text: #222;
+  --pad: 2.5rem;
+  --text: #222;                 /* near-black */
 }
 
 /* Reset */
@@ -10,7 +10,7 @@ html { box-sizing: border-box; }
 /* Fade-in */
 @keyframes fade { to { opacity: 1; } }
 
-/* ===== LAYOUT & TYPOGRAPHY ===== */
+/* ===== Layout & type ===== */
 body {
   margin: 0;
   padding: var(--pad) var(--pad) 0;
@@ -21,7 +21,14 @@ body {
   animation: fade 0.8s ease-out forwards;
   display: flex;
   flex-direction: column;
-  align-items: center;   /* center everything horizontally */
+  align-items: center;          /* centers header block */
+}
+
+/* Header block (centers headline + nav) */
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Headline */
@@ -32,7 +39,7 @@ h1 {
   margin: 0 0 1.2rem 0;
 }
 
-/* Navigation bar */
+/* Navigation */
 nav {
   display: inline-flex;
   gap: 2rem;
@@ -48,19 +55,19 @@ nav a {
 
 nav a:hover { text-decoration: underline; }
 
-/* ===== CORNER CLOCK ===== */
+/* Corner clock – Cormorant + black text */
 #clock {
   position: fixed;
   top: 12px;
   right: 20px;
   font: 16px/1.2 'Cormorant Garamond', serif;
-  color: #555;
+  color: var(--text);
   pointer-events: none;
 }
 
-/* ===== RESPONSIVE TWEAKS ===== */
+/* Small screens */
 @media (max-width: 600px) {
   :root { --pad: 1.5rem; }
-  h1   { font-size: 2.25rem; }
-  nav a{ font-size: 1.1rem; }
+  h1    { font-size: 2.25rem; }
+  nav a { font-size: 1.1rem; }
 }
