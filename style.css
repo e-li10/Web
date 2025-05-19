@@ -53,8 +53,8 @@ nav a:hover {
   max-width: 1200px;
   height: 240px;
   pointer-events: none;
-  border: 1px solid var(--text); /* made visible */
-  background: #111;               /* optional dark backdrop */
+  border: 1px solid var(--text); /* make the canvas edge visible */
+  background: #111;              /* optional—canvas stays dark until RD kicks in */
 }
 
 /* Clock */
