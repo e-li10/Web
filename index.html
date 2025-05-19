@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- full-screen fluid background -->
+  <!-- transparent, full-screen network canvas -->
   <canvas id="bg"></canvas>
 
   <header>
@@ -45,68 +45,88 @@
     setInterval(updateClock, 1000);
   </script>
 
-  <!-- Fluid “blob” animation script -->
+  <!-- Crypto × AI network animation -->
   <script>
   (function(){
     const cvs = document.getElementById('bg');
     const ctx = cvs.getContext('2d');
+    let W, H;
 
-    // full-viewport sizing
-    function resize(){
-      cvs.width  = window.innerWidth;
-      cvs.height = window.innerHeight;
+    // resize to full viewport
+    function resize() {
+      W = cvs.width  = window.innerWidth;
+      H = cvs.height = window.innerHeight;
     }
     window.addEventListener('resize', resize);
     resize();
 
-    // create N blobs with random size, speed and alpha
-    const blobs = [];
-    const N = 6;
-    for (let i = 0; i < N; i++) {
-      blobs.push({
-        x: Math.random() * cvs.width,
-        y: Math.random() * cvs.height,
-        r: (Math.random() * 0.2 + 0.15) * Math.max(cvs.width, cvs.height),
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        alpha: Math.random() * 0.2 + 0.1
+    // build nodes
+    const NODE_COUNT = 60;
+    const MAX_DIST  = 150;
+    const nodes = [];
+    for (let i = 0; i < NODE_COUNT; i++) {
+      nodes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.2,
+        r: 1 + Math.random() * 3
       });
     }
 
     function draw() {
-      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      ctx.clearRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'lighter';
-      blobs.forEach(b => {
+
+      // draw connections
+      for (let i = 0; i < NODE_COUNT; i++) {
+        for (let j = i + 1; j < NODE_COUNT; j++) {
+          const a = nodes[i], b = nodes[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d = Math.hypot(dx, dy);
+          if (d < MAX_DIST) {
+            ctx.strokeStyle = `rgba(0,170,255,${(1 - d / MAX_DIST) * 0.3})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // draw glowing nodes
+      nodes.forEach(n => {
         const grd = ctx.createRadialGradient(
-          b.x, b.y, b.r * 0.3,
-          b.x, b.y, b.r
+          n.x, n.y, n.r,
+          n.x, n.y, n.r * 5
         );
-        grd.addColorStop(0, `rgba(34,34,34,${b.alpha})`);
-        grd.addColorStop(1, 'rgba(34,34,34,0)');
+        grd.addColorStop(0, 'rgba(0,170,255,0.9)');
+        grd.addColorStop(1, 'rgba(0,170,255,0)');
         ctx.fillStyle = grd;
-        ctx.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r * 5, 0, 2 * Math.PI);
+        ctx.fill();
       });
+
       ctx.globalCompositeOperation = 'source-over';
     }
 
     function update() {
-      blobs.forEach(b => {
-        b.x += b.vx;
-        b.y += b.vy;
-        // wrap around
-        if (b.x < -b.r) b.x = cvs.width + b.r;
-        if (b.x > cvs.width + b.r) b.x = -b.r;
-        if (b.y < -b.r) b.y = cvs.height + b.r;
-        if (b.y > cvs.height + b.r) b.y = -b.r;
+      nodes.forEach(n => {
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > W) n.vx *= -1;
+        if (n.y < 0 || n.y > H) n.vy *= -1;
       });
     }
 
-    function loop(){
+    (function loop(){
       draw();
       update();
       requestAnimationFrame(loop);
-    }
-    loop();
+    })();
+
   })();
   </script>
 </body>
