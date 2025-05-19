@@ -23,8 +23,8 @@
     </nav>
   </header>
 
-  <!-- Block Pulse: live Ethereum-hash generative art -->
-  <canvas id="pulse" height="240"></canvas>
+  <!-- Block Pulse canvas -->
+  <canvas id="pulse" height="200"></canvas>
 
   <!-- Live Eastern-Time clock -->
   <div id="clock"></div>
@@ -39,101 +39,11 @@
         }).format(new Date());
     updateClock(); setInterval(updateClock, 1_000);
 
-    /* ---------- BLOCK PULSE ---------- */
+    /* ---------- BLOCK PULSE (WebGL + 2-D fallback) ---------- */
     (async () => {
       const cvs = document.getElementById('pulse');
-      const gl  = cvs.getContext('webgl', {antialias: true});
-      if (!gl) return;                                    // graceful fallback
-
-      /* compile tiny shader pair */
-      const vsSrc = `attribute vec3 p;void main(){gl_PointSize=2.0;gl_Position=vec4(p,1);}`;
-      const fsSrc = `void main(){gl_FragColor=vec4(0.07,0.07,0.07,1);}`;
-      const compile = (src,type) => {
-        const s = gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
-        return s;
-      };
-      const prog = gl.createProgram();
-      gl.attachShader(prog,compile(vsSrc,gl.VERTEX_SHADER));
-      gl.attachShader(prog,compile(fsSrc,gl.FRAGMENT_SHADER));
-      gl.linkProgram(prog); gl.useProgram(prog);
-
-      /* buffer + attribute setup */
-      const buf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER,buf);
-      const loc = gl.getAttribLocation(prog,'p');
-      gl.enableVertexAttribArray(loc);
-      gl.vertexAttribPointer(loc,3,gl.FLOAT,false,0,0);
-
-      /* tiny deterministic pseudo-noise */
-      const noise = x => {
-        const t = Math.sin(x*12.9898)*43758.5453;
-        return t - Math.floor(t);
-      };
-
-      /* resize canvas + viewport */
-      const resize = () => {
-        cvs.width  = innerWidth * 0.8 | 0;       // 80 vw exact pixels
-        cvs.height = 240;
-        gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
-      };
-      addEventListener('resize', resize); resize();
-
-      /* grab newest block hash */
-      const rpc = 'https://cloudflare-eth.com';
-      const latestHash = async () =>
-        fetch(rpc, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            jsonrpc:'2.0', id:1, method:'eth_getBlockByNumber', params:['latest',false]
-          })
-        }).then(r=>r.json()).then(j=>j.result.hash);
-
-      /* draw point cloud */
-      const draw = async () => {
-        const hash = await latestHash();
-        const seed = parseInt(hash.slice(2,10),16) / 1e8; // stable seed 0-10
-        const verts = new Float32Array(400*3);            // 400 pts * xyz
-        for (let i=0;i<400;i++){
-          const x = (i%20)/19*2-1;
-          const y = (i/20|0)/19*2-1;
-          const z = (noise(seed + x*2.3 + y*1.7)-0.5)*0.35;
-          verts.set([x,y,z], i*3);
-        }
-        gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.drawArrays(gl.POINTS, 0, 400);
-      };
-
-      await draw();                   // first paint
-      setInterval(draw, 12_000);      // ≈ new block cadence
-    })();
-  </script>
-</body>
-</html>
-
-<!-- …everything above is identical … -->
-
-  <!-- Block Pulse: live Ethereum hash art -->
-  <canvas id="pulse" height="200"></canvas>   <!-- shorter, still roomy -->
-
-  <!-- Live Eastern-Time clock -->
-  <div id="clock"></div>
-
-  <script>
-    /* ---------- CLOCK (unchanged) ---------- */
-    const updateClock = () =>
-      document.getElementById('clock').textContent =
-        new Intl.DateTimeFormat('en-US', {
-          timeZone:'America/New_York',
-          hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'
-        }).format(new Date());
-    updateClock(); setInterval(updateClock,1_000);
-
-    /* ---------- BLOCK PULSE (2-D fallback baked-in) ---------- */
-    (async () => {
-      const cvs = document.getElementById('pulse');
-      const gl  = cvs.getContext('webgl',{antialias:true});
-      const ctx = !gl && cvs.getContext('2d');        // fallback if WebGL off
+      const gl  = cvs.getContext('webgl', {antialias:true});
+      const ctx = !gl && cvs.getContext('2d');        // 2-D if WebGL off
 
       const rpc = 'https://cloudflare-eth.com';
       const latestHash = async () =>
@@ -144,7 +54,7 @@
           })
         }).then(r=>r.json()).then(j=>j.result.hash);
 
-      /* ---------- WebGL path ---------- */
+      /* ------ WebGL path ------ */
       if (gl){
         const vs=`attribute vec3 p;void main(){gl_PointSize=2.0;gl_Position=vec4(p,1);}`;
         const fs=`void main(){gl_FragColor=vec4(0.07,0.07,0.07,1);}`;
@@ -178,13 +88,15 @@
         return;
       }
 
-      /* ---------- 2-D fallback (always runs if WebGL absent) ---------- */
+      /* ------ 2-D fallback ------ */
       const resize2d=()=>{cvs.width=innerWidth*0.8|0;cvs.height=200;}
       addEventListener('resize',resize2d); resize2d();
 
       const draw2d=async()=>{
-        const hash=await latestHash();             // 0x + 64 hex chars
-        const nums=[...hash.slice(2)].reduce((a,c,i)=>{if(i%2) a.push(parseInt(hash.slice(2+i-1,2+i),16));return a;},[]);
+        const hash=await latestHash();
+        const nums=[...hash.slice(2)].reduce((a,c,i)=>{
+          if(i%2) a.push(parseInt(hash.slice(2+i-1,2+i),16)); return a;
+        },[]);
         const {width:w,height:h}=cvs;
         ctx.clearRect(0,0,w,h);
         ctx.beginPath(); ctx.moveTo(0,h/2);
