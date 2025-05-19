@@ -1,51 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Eric Li</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Eric Li</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <!-- identical font + weights -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+<!-- identical typeface -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css">
+<style>
+/* --- reset --- */
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* --- palette & rhythm --- */
+:root{
+  --charcoal:#2c2d2e;
+  --top-space:35px;      /* space above image (matches spacer) */
+  --stack-width:680px;   /* same column width */
+}
+
+/* --- layout --- */
+body{
+  font-family:'Cormorant Garamond',serif;
+  color:var(--charcoal);
+  text-align:center;
+  line-height:1.45;
+}
+
+main{
+  width:var(--stack-width);
+  margin:var(--top-space) auto 0;
+}
+
+/* hero image: 131 px wide in the WP block (height auto) */
+#hero{
+  width:131px;
+  height:auto;
+  display:block;
+  margin:0 auto 5px;     /* 5 px spacer block in original */
+  object-fit:cover;
+}
+
+/* name */
+h1{
+  font-size:64px;        /* exact WP default for H1 in Seedlet */
+  font-weight:400;
+  letter-spacing:.01em;
+  margin-bottom:35px;    /* same gap before nav */
+}
+
+/* nav row */
+nav{
+  display:flex;
+  justify-content:center;
+  gap:110px;             /* tuned so “Home  Thoughts” line up */
+  font-size:22px;        /* Seedlet’s normal size class */
+}
+
+nav a{
+  color:var(--charcoal);
+  text-decoration:none;
+  letter-spacing:.04em;
+  transition:opacity .25s;
+}
+nav a:hover{opacity:.6}
+
+/* clock */
+#clock{
+  position:fixed;
+  top:15px;
+  right:28px;
+  font-size:18px;        /* slightly larger, same font */
+  font-weight:400;
+  font-family:'Cormorant Garamond',serif;
+  color:var(--charcoal);
+}
+</style>
 </head>
 
 <body>
-  <div class="stack">
+<time id="clock"></time>
 
-    <img id="hero" alt="header artwork">
+<main>
+  <img id="hero" src="https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=512&q=80" alt="Header image">
 
-    <h1>Eric Li</h1>
+  <h1>Eric Li</h1>
 
-    <nav>
-      <a href="/">Home</a>
-      <a href="/thoughts">Thoughts</a>
-    </nav>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/thoughts">Thoughts</a>
+  </nav>
+</main>
 
-  </div>
+<script>
+/* rotate image each load (optional) */
+const pics=[
+  'https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=512&q=80',
+  'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=512&q=80',
+  'https://images.unsplash.com/photo-1505664063602-ad8dcead31b1?auto=format&fit=crop&w=512&q=80'
+];
+document.getElementById('hero').src=pics[Math.floor(Math.random()*pics.length)];
 
-  <time id="clock"></time>
-
-  <script>
-    /* rotate header photo */
-    const pics = [
-      'https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1505664063602-ad8dcead31b1?auto=format&fit=crop&w=800&q=80'
-    ];
-    document.getElementById('hero').src = pics[Math.floor(Math.random()*pics.length)];
-
-    /* live 24-hour clock, EST */
-    const clock = document.getElementById('clock');
-    const tick = () => clock.textContent = new Intl.DateTimeFormat('en-US',{
-      timeZone:'America/New_York',
-      hour12:false,
-      hour:'2-digit', minute:'2-digit', second:'2-digit'
-    }).format(new Date());
-    tick(); setInterval(tick,1000);
-  </script>
+/* live 24-hour Eastern Time clock */
+const clk=document.getElementById('clock');
+function tick(){
+  clk.textContent=new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/New_York',
+    hour12:false,
+    hour:'2-digit',minute:'2-digit',second:'2-digit'
+  }).format(new Date());
+}
+tick(); setInterval(tick,1000);
+</script>
 </body>
 </html>
