@@ -1,74 +1,78 @@
 /* reset */
 *{margin:0;padding:0;box-sizing:border-box}
 
-/* palette + baseline rhythm */
+/* palette + baseline */
 :root{
-  --space:22px;               /* tighter vertical rhythm */
-  --dark:#2b2b2b;             /* softer than solid black */
-  --muted:#555;
-  --faint:#777;
+  --space:28px;              /* baseline rhythm */
+  --dark:#2c2d2e;            /* text colour from reference */
+  --muted:#495057;           /* nav colour */
+  --line:#2c2d2e;            /* divider colour */
+  --clock:#60686f;           /* subtle clock tint */
 }
 
-/* layout */
+/* page */
 body{
   font-family:'Cormorant Garamond',serif;
   color:var(--dark);
   text-align:center;
-  line-height:1.42;
+  line-height:1.45;
   padding-top:var(--space);
-  opacity:0;
-  animation:fade .5s ease .05s forwards;
 }
 
+/* centred column */
 .container{
-  max-width:680px;            /* same width as Othman’s column */
+  max-width:680px;
   margin:0 auto;
 }
 
-/* hero image */
+/* hero */
 #hero{
-  width:180px;                /* smaller = less “template” */
-  height:180px;
+  width:200px;
+  height:200px;
   object-fit:cover;
   display:block;
   margin:0 auto var(--space);
-  border-radius:2px;          /* micro-detail: softens the box */
 }
 
 /* name */
 h1{
-  font-size:52px;             /* fits a 1.25× scale */
-  font-weight:300;
-  letter-spacing:.015em;
+  font-size:56px;            /* slight boldness */
+  font-weight:500;
+  letter-spacing:.01em;
   margin-bottom:var(--space);
 }
 
-/* navigation */
+/* nav */
 nav{
   display:flex;
   justify-content:center;
-  gap:60px;                   /* even spacing under the name */
-  margin-bottom:calc(var(--space)*1.5);
+  gap:96px;                  /* symmetrical under the name */
+  margin-bottom:var(--space);
 }
 
 nav a{
-  font-size:20px;
-  font-weight:300;
+  font-size:22px;
+  font-weight:400;
   color:var(--muted);
   text-decoration:none;
-  letter-spacing:.05em;
+  letter-spacing:.04em;
   transition:opacity .25s;
 }
 nav a:hover{opacity:.6}
 
-/* clock */
-#clock{
-  position:fixed;
-  top:10px;
-  right:20px;
-  font-size:12px;
-  color:var(--faint);
+/* divider */
+.divider{
+  width:70%;
+  margin:var(--space) auto;
+  border:none;
+  border-top:1px solid var(--line);
 }
 
-/* subtle fade-in */
-@keyframes fade{to{opacity:1}}
+/* clock (slightly larger than Othman’s) */
+#clock{
+  position:fixed;
+  top:12px;
+  right:24px;
+  font-size:14px;
+  color:var(--clock);
+}
