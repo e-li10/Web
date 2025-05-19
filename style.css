@@ -20,40 +20,22 @@ body {
 
 /* Header */
 header {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 12vh;
 }
-
-/* Canvas sits as a block below the header */
-#art {
-  width: 80vw;
-  max-width: 1200px;
-  height: 60vh;
-  margin-bottom: 3rem;
-  background: transparent;
-  cursor: grab;
-}
-#art:active {
-  cursor: grabbing;
-}
-
-/* Ensure text sits above */
 header h1,
 header nav {
   position: relative;
   z-index: 1;
 }
 
-/* Title */
 h1 {
   font: 600 4.5rem 'Cormorant Garamond', serif;
   margin: 0 0 1.75rem;
 }
 
-/* Nav */
 nav {
   display: inline-flex;
   gap: 2.5rem;
@@ -66,6 +48,19 @@ nav a {
 }
 nav a:hover {
   text-decoration: underline;
+}
+
+/* Canvas */
+#art {
+  width: 80vw;
+  max-width: 1200px;
+  height: 60vh;
+  margin-bottom: 3rem;
+  background: transparent;
+  cursor: grab;
+}
+#art:active {
+  cursor: grabbing;
 }
 
 /* Clock */
