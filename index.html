@@ -16,6 +16,7 @@
   <!-- Site styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <header>
     <h1>Eric Li</h1>
@@ -29,7 +30,6 @@
   <div id="clock"></div>
 
   <script>
-    // live clock
     function updateClock() {
       document.getElementById('clock').textContent =
         new Intl.DateTimeFormat('en-US', {
@@ -44,22 +44,20 @@
     setInterval(updateClock, 1000);
   </script>
 
-  <!-- Three.js voxel chain -->
   <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.150.0/build/three.module.js';
     import { OrbitControls } from 'https://unpkg.com/three@0.150.0/examples/jsm/controls/OrbitControls.js';
 
-    // renderer + scene + camera
-    const canvas = document.getElementById('art');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    const canvas   = document.getElementById('art');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111111);
+
+    const scene  = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
-    camera.position.set(0, 1.5, 5);
+    camera.position.set(0, 1, 4);
 
     // lights
-    scene.add(new THREE.AmbientLight(0x444444));
+    scene.add(new THREE.AmbientLight(0x888888));
     const dir = new THREE.DirectionalLight(0xffffff, 0.8);
     dir.position.set(5, 10, 7);
     scene.add(dir);
@@ -67,69 +65,64 @@
     // controls
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
+    controls.dampingFactor = 0.07;
 
     // materials
-    const blockMat = new THREE.MeshStandardMaterial({ color: 0x00ffcc, metalness: 0.2, roughness: 0.6 });
-    const linkMat  = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.2, roughness: 0.6 });
+    const blockMat = new THREE.MeshStandardMaterial({ color: 0x00ccff, metalness: 0.3, roughness: 0.5 });
+    const linkMat  = new THREE.MeshStandardMaterial({ color: 0xff8800, metalness: 0.3, roughness: 0.5 });
 
-    // parameters
-    const CLUSTER_COUNT = 3;
-    const CLUSTER_SIZE = 3;            // 3×3×3 voxels
-    const VOXEL_SIZE   = 0.3;
-    const SPACING      = 0.35;         // center-to-center
-    const LINK_CUBES   = [ -0.75, 0.75 ];
+    // build voxel chain
+    const GROUP = new THREE.Group();
+    scene.add(GROUP);
 
-    // group everything
-    const chainGroup = new THREE.Group();
-    scene.add(chainGroup);
+    const CLUSTERS   = 3;
+    const SIZE       = 3;     // 3×3×3
+    const VOXEL      = 0.3;
+    const STEP       = 0.35;
+    const LINK_POS   = [ -1, 1 ]; // linking positions (in cluster units)
 
-    // build clusters
-    for (let c = 0; c < CLUSTER_COUNT; c++) {
-      const cx = (c - 1) * SPACING * CLUSTER_SIZE; // e.g. -1.05, 0, +1.05
-      for (let i = 0; i < CLUSTER_SIZE; i++) {
-        for (let j = 0; j < CLUSTER_SIZE; j++) {
-          for (let k = 0; k < CLUSTER_SIZE; k++) {
-            const mesh = new THREE.Mesh(
-              new THREE.BoxGeometry(VOXEL_SIZE, VOXEL_SIZE, VOXEL_SIZE),
+    // clusters
+    for (let c = 0; c < CLUSTERS; c++) {
+      const offsetX = (c - 1) * STEP * SIZE;
+      for (let x = 0; x < SIZE; x++) {
+        for (let y = 0; y < SIZE; y++) {
+          for (let z = 0; z < SIZE; z++) {
+            const m = new THREE.Mesh(
+              new THREE.BoxGeometry(VOXEL, VOXEL, VOXEL),
               blockMat
             );
-            mesh.position.set(
-              cx + (i - 1) * SPACING,
-              (j - 1) * SPACING,
-              (k - 1) * SPACING
+            m.position.set(
+              offsetX + (x - 1) * STEP,
+              (y - 1) * STEP,
+              (z - 1) * STEP
             );
-            chainGroup.add(mesh);
+            GROUP.add(m);
           }
         }
       }
     }
 
-    // build linking voxels
-    LINK_CUBES.forEach(x => {
+    // linking voxels
+    LINK_POS.forEach(p => {
       const link = new THREE.Mesh(
-        new THREE.BoxGeometry(VOXEL_SIZE * 0.6, VOXEL_SIZE * 0.6, VOXEL_SIZE * 0.6),
+        new THREE.BoxGeometry(VOXEL * 0.6, VOXEL * 0.6, VOXEL * 0.6),
         linkMat
       );
-      link.position.set(x * SPACING * (CLUSTER_SIZE/3), 0, 0);
-      chainGroup.add(link);
+      link.position.set(p * STEP * (SIZE/2), 0, 0);
+      GROUP.add(link);
     });
 
-    // animate + render
+    // animate
     const clock = new THREE.Clock();
     function animate() {
       controls.update();
       const t = clock.getElapsedTime();
-
-      // gentle group rotation
-      chainGroup.rotation.x = Math.sin(t*0.2) * 0.1;
-      chainGroup.rotation.y += 0.0015;
-
+      GROUP.rotation.x = Math.sin(t * 0.2) * 0.1;
+      GROUP.rotation.y += 0.0015;
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     }
 
-    // resize handler
     function onResize() {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
