@@ -47,33 +47,26 @@
     setInterval(updateClock, 1000);
   </script>
 
-  <!-- Reaction-Diffusion Script -->
+  <!-- Reaction-Diffusion Script (fixed ping-pong) -->
   <script>
   (function(){
     const cvs = document.getElementById('rd');
-    // Try WebGL2, else WebGL1
+    // 1) WebGL2 first, then fallback to WebGL1
     const gl2 = cvs.getContext('webgl2');
     const gl  = gl2 || cvs.getContext('webgl');
-    if (!gl) {
-      console.error('WebGL not supported');
-      return;
-    }
+    if (!gl) { console.error('WebGL not supported'); return; }
     const isWebGL2 = !!gl2;
 
-    // **Always** require the float-buffer extension for render-to-float on both contexts
-    const extFloatBuffer = gl.getExtension('EXT_color_buffer_float')
-                          || gl.getExtension('WEBGL_color_buffer_float');
-    if (!extFloatBuffer) {
-      console.warn('EXT_color_buffer_float not available; aborting RD.');
-      return;
-    }
-    // On WebGL1 you still need these to work with float textures
+    // 2) Always need float-buffer extension to render to float textures
+    const extFB = gl.getExtension('EXT_color_buffer_float')
+                || gl.getExtension('WEBGL_color_buffer_float');
+    if (!extFB) { console.warn('Need EXT_color_buffer_float; aborting.'); return; }
     if (!isWebGL2) {
       gl.getExtension('OES_texture_float');
       gl.getExtension('OES_texture_float_linear');
     }
 
-    // Resize to 80vw × 240px
+    // 3) Resize helper
     function resize(){
       cvs.width  = innerWidth * 0.8 | 0;
       cvs.height = 240;
@@ -82,7 +75,7 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // Shader sources (unchanged)
+    // 4) Shaders (unchanged)
     const vsSrc = `
       attribute vec2 a;
       void main(){ gl_Position = vec4(a,0,1); }
@@ -103,9 +96,9 @@
       }
       void main(){
         vec2 uv = gl_FragCoord.xy/texSize;
-        vec4 c = texture2D(prev,uv);
+        vec4 c  = texture2D(prev,uv);
         float A = c.r, B = c.g;
-        vec4 L = lap(prev,uv);
+        vec4 L  = lap(prev,uv);
         float dA = 1.0*L.r - A*B*B + feed*(1.0 - A);
         float dB = 0.5*L.g + A*B*B - (kill+feed)*B;
         A += dA*dt;
@@ -125,7 +118,7 @@
     gl.linkProgram(prog);
     gl.useProgram(prog);
 
-    // Set uniforms
+    // 5) Uniform setup
     gl.uniform1i(gl.getUniformLocation(prog, 'prev'), 0);
     gl.uniform2f(gl.getUniformLocation(prog, 'texSize'),
                  cvs.width, cvs.height);
@@ -133,29 +126,23 @@
     gl.uniform1f(gl.getUniformLocation(prog, 'kill'), 0.062);
     gl.uniform1f(gl.getUniformLocation(prog, 'dt'), 1.0);
 
-    // Full-screen quad
+    // 6) Full-screen quad (unchanged)
+    const quad = new Float32Array([-1,-1,  1,-1,  -1,1,  -1,1,  1,-1,  1,1]);
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER,
-      new Float32Array([-1,-1, 1,-1, -1,1,  -1,1, 1,-1, 1,1]),
-      gl.STATIC_DRAW
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
     const aLoc = gl.getAttribLocation(prog, 'a');
     gl.enableVertexAttribArray(aLoc);
     gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
 
-    // Choose internal format
-    const internalFormat = isWebGL2 ? gl.RGBA32F : gl.RGBA;
-
-    // Create float textures & FBOs
+    // 7) Ping-pong textures & FBOs
+    const internalFmt = isWebGL2 ? gl.RGBA32F : gl.RGBA;
     function makeTex(){
       const t = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.texImage2D(
-        gl.TEXTURE_2D, 0, internalFormat,
-        cvs.width, cvs.height, 0,
-        gl.RGBA, gl.FLOAT, null
-      );
+      gl.texImage2D(gl.TEXTURE_2D, 0, internalFmt,
+                    cvs.width, cvs.height, 0,
+                    gl.RGBA, gl.FLOAT, null);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       return t;
@@ -163,52 +150,49 @@
     const texA = makeTex(), texB = makeTex();
     const fboA = gl.createFramebuffer(), fboB = gl.createFramebuffer();
 
-    // Seed initial A/B
+    // 8) Seed only texA
     const seed = new Float32Array(cvs.width * cvs.height * 4);
-    for (let y = 0; y < cvs.height; y++) {
-      for (let x = 0; x < cvs.width; x++) {
+    for (let y=0; y<cvs.height; y++) {
+      for (let x=0; x<cvs.width; x++) {
         const i = (y * cvs.width + x) * 4;
         seed[i]   = 1.0;
-        seed[i+1] = (x > cvs.width/2-10 && x < cvs.width/2+10 &&
-                     y > cvs.height/2-10 && y < cvs.height/2+10)
+        seed[i+1] = (x>cvs.width/2-10 && x<cvs.width/2+10 &&
+                     y>cvs.height/2-10 && y<cvs.height/2+10)
                   ? 1.0 : 0.0;
         seed[i+2] = 0.0;
         seed[i+3] = 1.0;
       }
     }
     gl.bindTexture(gl.TEXTURE_2D, texA);
-    gl.texImage2D(
-      gl.TEXTURE_2D, 0, internalFormat,
-      cvs.width, cvs.height, 0,
-      gl.RGBA, gl.FLOAT, seed
-    );
+    gl.texImage2D(gl.TEXTURE_2D, 0, internalFmt,
+                  cvs.width, cvs.height, 0,
+                  gl.RGBA, gl.FLOAT, seed);
 
-    // Ping-pong
+    // 9) Render loop with CORRECT ping-pong
     let pingTex = texA, pongTex = texB;
     let pingFBO = fboA, pongFBO = fboB;
 
     function step(){
-      // write into pongFBO
+      // **write** into pongTex via pongFBO
       gl.bindFramebuffer(gl.FRAMEBUFFER, pongFBO);
-      gl.framebufferTexture2D(
-        gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-        gl.TEXTURE_2D, pingTex, 0
-      );
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                              gl.TEXTURE_2D, pongTex, 0);
+      // **read** from pingTex
       gl.bindTexture(gl.TEXTURE_2D, pingTex);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-      // blit to screen
+      // **display** the newly-written pongTex
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      gl.bindTexture(gl.TEXTURE_2D, pingTex);
+      gl.bindTexture(gl.TEXTURE_2D, pongTex);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-      // swap
+      // swap ping↔pong
       [pingTex, pongTex] = [pongTex, pingTex];
       [pingFBO, pongFBO] = [pongFBO, pingFBO];
+
       requestAnimationFrame(step);
     }
     step();
-
   })();
   </script>
 </body>
