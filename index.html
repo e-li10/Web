@@ -23,7 +23,7 @@
   </header>
 
   <!-- Block Pulse canvas -->
-  <canvas id="network"></canvas>
+  <canvas id="rd"></canvas>
 
   <!-- Live Eastern-Time clock -->
 <div id="clock"></div>
@@ -48,67 +48,127 @@
   <div id="clock"></div>
 
 <script>
-;(function(){
-  const cvs = document.getElementById('network');
-  const ctx = cvs.getContext('2d');
-  const N   = 40;            // number of AI agent nodes
-  const R   = 120;           // max connect distance
+(function(){
+  const cvs = document.getElementById('rd');
+  const gl  = cvs.getContext('webgl');
+  if(!gl) return;
 
-  // 1) Resize canvas to fit nicely under header
+  // Resize
   function resize(){
-    cvs.width  = window.innerWidth * 0.8 | 0;
-    cvs.height = 200;
+    cvs.width  = innerWidth * 0.8 | 0;
+    cvs.height = 240;
+    gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
   }
   window.addEventListener('resize', resize);
   resize();
 
-  // 2) Init N moving nodes
-  const nodes = Array.from({length:N}, () => ({
-    x: Math.random() * cvs.width,
-    y: Math.random() * cvs.height,
-    vx: (Math.random()*2 -1)*0.3,
-    vy: (Math.random()*2 -1)*0.3
-  }));
-
-  // 3) Animation loop
-  function tick(){
-    ctx.clearRect(0,0,cvs.width,cvs.height);
-
-    // update positions and bounce off edges
-    nodes.forEach(n => {
-      n.x += n.vx; n.y += n.vy;
-      if (n.x < 0 || n.x > cvs.width)  n.vx *= -1;
-      if (n.y < 0 || n.y > cvs.height) n.vy *= -1;
-    });
-
-    // draw lines between close nodes
-    for (let i=0;i<N;i++){
-      for (let j=i+1;j<N;j++){
-        const a=nodes[i], b=nodes[j];
-        const dx=b.x - a.x, dy=b.y - a.y;
-        const d2 = dx*dx+dy*dy;
-        if (d2 < R*R){
-          const alpha = 1 - d2/(R*R);
-          ctx.strokeStyle = `rgba(34,34,34,${alpha*0.6})`;
-          ctx.beginPath();
-          ctx.moveTo(a.x,a.y);
-          ctx.lineTo(b.x,b.y);
-          ctx.stroke();
-        }
-      }
+  // Compile shaders
+  const vs = `
+    attribute vec2 a;
+    void main(){ gl_Position = vec4(a,0,1); }
+  `;
+  const fs = `
+    precision highp float;
+    uniform sampler2D prev;
+    uniform vec2 texSize;
+    uniform float feed, kill, dt;
+    vec4 lap(sampler2D s, vec2 uv){
+      vec2 o = 1.0/texSize;
+      vec4 sum = texture2D(s, uv + vec2(-o.x,0.0))
+               + texture2D(s, uv + vec2( o.x,0.0))
+               + texture2D(s, uv + vec2(0.0,-o.y))
+               + texture2D(s, uv + vec2(0.0, o.y))
+               - 4.0 * texture2D(s, uv);
+      return sum;
     }
-
-    // draw each node as a little dot
-    nodes.forEach(n => {
-      ctx.fillStyle = '#222';
-      ctx.beginPath();
-      ctx.arc(n.x,n.y,2.5,0,Math.PI*2);
-      ctx.fill();
-    });
-
-    requestAnimationFrame(tick);
+    void main(){
+      vec2 uv = gl_FragCoord.xy / texSize;
+      vec4 c = texture2D(prev, uv);
+      float A = c.r, B = c.g;
+      vec4 L = lap(prev, uv);
+      float dA = 1.0 * L.r - A*B*B + feed*(1.0 - A);
+      float dB = 0.5 * L.g + A*B*B - (kill+feed)*B;
+      A += dA * dt;
+      B += dB * dt;
+      gl_FragColor = vec4(A, B, 0.0, 1.0);
+    }
+  `;
+  function compile(src,type){
+    const s=gl.createShader(type);
+    gl.shaderSource(s,src);
+    gl.compileShader(s);
+    return s;
   }
+  const prog=gl.createProgram();
+  gl.attachShader(prog, compile(vs,gl.VERTEX_SHADER));
+  gl.attachShader(prog, compile(fs,gl.FRAGMENT_SHADER));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
 
-  tick();
+  // Full-screen quad
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1,-1,  1,-1,  -1,1,
+    -1,1,   1,-1,   1,1
+  ]), gl.STATIC_DRAW);
+  const aLoc = gl.getAttribLocation(prog,'a');
+  gl.enableVertexAttribArray(aLoc);
+  gl.vertexAttribPointer(aLoc,2,gl.FLOAT,false,0,0);
+
+  // Set uniforms
+  const feedLoc = gl.getUniformLocation(prog,'feed');
+  const killLoc = gl.getUniformLocation(prog,'kill');
+  const dtLoc   = gl.getUniformLocation(prog,'dt');
+  const sizeLoc = gl.getUniformLocation(prog,'texSize');
+  gl.uniform2f(sizeLoc, cvs.width, cvs.height);
+  gl.uniform1f(feedLoc, 0.055);
+  gl.uniform1f(killLoc, 0.062);
+  gl.uniform1f(dtLoc,   1.0);
+
+  // Ping‐pong textures
+  let ping = createTexture(), pong = createTexture();
+  function createTexture(){
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D,t);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
+      cvs.width,cvs.height,0,gl.RGBA,gl.FLOAT,null);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    return t;
+  }
+  // Seed small square of B
+  const seed = new Float32Array(cvs.width*cvs.height*4);
+  for(let y=0;y<cvs.height;y++){
+    for(let x=0;x<cvs.width;x++){
+      const i=(y*cvs.width+x)*4;
+      seed[i]   = 1.0;
+      seed[i+1] = (x>cvs.width/2-10 && x<cvs.width/2+10
+                && y>cvs.height/2-10 && y<cvs.height/2+10)
+                ? 1.0 : 0.0;
+      seed[i+2]=0; seed[i+3]=1;
+    }
+  }
+  gl.bindTexture(gl.TEXTURE_2D,ping);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,
+    cvs.width,cvs.height,0,gl.RGBA,gl.FLOAT,seed);
+
+  function step(){
+    // Render ping→pong
+    gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer());
+    gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,pong,0);
+    gl.bindTexture(gl.TEXTURE_2D,ping);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+
+    // Swap
+    [ping,pong] = [pong,ping];
+    requestAnimationFrame(step);
+  }
+  step();
+
+  // Float textures require EXT_color_buffer_float
+  gl.getExtension('OES_texture_float');
+  gl.getExtension('OES_texture_float_linear');
 })();
 </script>
