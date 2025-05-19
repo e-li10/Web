@@ -5,7 +5,7 @@
   <title>Eric Li</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- identical typeface -->
+  <!-- identical font + weights -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
@@ -14,15 +14,12 @@
 </head>
 
 <body>
-  <div class="column">
+  <div class="stack">
 
-    <!-- header image -->
     <img id="hero" alt="header artwork">
 
-    <!-- name -->
     <h1>Eric Li</h1>
 
-    <!-- navigation -->
     <nav>
       <a href="/">Home</a>
       <a href="/thoughts">Thoughts</a>
@@ -30,11 +27,10 @@
 
   </div>
 
-  <!-- live clock -->
   <time id="clock"></time>
 
   <script>
-    /* rotate image on each reload */
+    /* rotate header photo */
     const pics = [
       'https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80',
@@ -42,14 +38,12 @@
     ];
     document.getElementById('hero').src = pics[Math.floor(Math.random()*pics.length)];
 
-    /* 24-hour Eastern-time clock */
+    /* live 24-hour clock, EST */
     const clock = document.getElementById('clock');
     const tick = () => clock.textContent = new Intl.DateTimeFormat('en-US',{
       timeZone:'America/New_York',
       hour12:false,
-      hour:'2-digit',
-      minute:'2-digit',
-      second:'2-digit'
+      hour:'2-digit', minute:'2-digit', second:'2-digit'
     }).format(new Date());
     tick(); setInterval(tick,1000);
   </script>
