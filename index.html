@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
-<!-- Preload the Lozowick image so it’s requested during HTML parse -->
+<!-- Preload Lozowick print -->
 <link
   rel="preload"
   as="image"
@@ -27,17 +27,19 @@
 
 /* ---------- shared values ---------- */
 :root{
-  --charcoal:#2c2d2e;
+  --ink:#444;                 /* softened charcoal */
   --stack-width:680px;
-  --top-space:45px;          /* offset from very top */
+  --top-space:45px;           /* offset from very top */
 }
 
 /* ---------- layout ---------- */
 body{
   font-family:'Cormorant Garamond',serif;
-  color:var(--charcoal);
+  color:var(--ink);
   text-align:center;
   line-height:1.45;
+  opacity:0;                  /* fade-in */
+  animation:fade .4s ease forwards;
 }
 
 main{
@@ -50,7 +52,7 @@ main{
   width:131px;
   height:auto;
   display:block;
-  margin:0 auto 25px;        /* gap between image and name */
+  margin:0 auto 25px;         /* gap between image and name */
   object-fit:cover;
 }
 
@@ -68,15 +70,24 @@ nav{
   justify-content:center;
   gap:100px;
   font-size:22px;
+  transform:translateX(10px); /* nudge row right 10 px */
 }
 
 nav a{
-  color:var(--charcoal);
+  color:var(--ink);
   text-decoration:none;
   letter-spacing:.04em;
   transition:opacity .25s;
 }
 nav a:hover{opacity:.6}
+
+/* hair-line divider */
+.divider{
+  width:70%;
+  margin:90px auto 0;         /* 90 px below nav */
+  border:none;
+  border-top:1px solid var(--ink);
+}
 
 /* clock */
 #clock{
@@ -86,8 +97,11 @@ nav a:hover{opacity:.6}
   font-family:'Cormorant Garamond',serif;
   font-weight:400;
   font-size:18px;
-  color:var(--charcoal);
+  color:var(--ink);
 }
+
+/* fade-in keyframes */
+@keyframes fade{to{opacity:1}}
 </style>
 </head>
 
@@ -96,8 +110,7 @@ nav a:hover{opacity:.6}
 
 <main>
   <!-- Louis Lozowick – New York (1923) -->
-  <img
-       id="hero"
+  <img id="hero"
        src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
        srcset="
          https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=512 512w,
@@ -106,13 +119,15 @@ nav a:hover{opacity:.6}
        width="131" height="131"
        fetchpriority="high"
        alt="Louis Lozowick, New York (1923)">
-  
+
   <h1>Eric Li</h1>
 
   <nav>
     <a href="/">Home</a>
     <a href="/thoughts">Thoughts</a>
   </nav>
+
+  <hr class="divider">
 </main>
 
 <script>
