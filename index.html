@@ -97,44 +97,45 @@ setInterval(tick,1000);
 </script>
 
 <!-- favicon-sparkline script -->
+<!-- favicon-sparkline -->
 <script>
 const icon = document.createElement('link');
 icon.rel  = 'icon';
 icon.type = 'image/png';
+icon.sizes = '16x16';                // <-- new
 document.head.appendChild(icon);
 
-const cvs  = document.createElement('canvas');
-cvs.width  = cvs.height = 16;
-const ctx  = cvs.getContext('2d');
-const tape = [];                     // rolling price memory (120 × 30 s ≈ 1 h)
+const cvs = document.createElement('canvas');
+cvs.width = cvs.height = 16;
+const ctx = cvs.getContext('2d');
+const tape = [];                      // 120 × 30 s ≈ 1 h
 
 async function ping(){
   try{
-    const r = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
-    );
-    const p = (await r.json()).ethereum.usd;
+    // CORS-friendly endpoint
+    const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
+    const p = +((await r.json()).data.amount);
     tape.push(p);
-    if(tape.length > 120) tape.shift();        // keep last 120 samples ≈ 1 h
+    if(tape.length > 120) tape.shift();
 
-    // normalise to 0–15px
     const hi = Math.max(...tape), lo = Math.min(...tape)||1;
     ctx.clearRect(0,0,16,16);
     ctx.beginPath();
     tape.forEach((v,i)=>{
       const x = i * 16 / (tape.length-1);
-      const y = 15 - ((v - lo) / (hi - lo)) * 15;
-      i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+      const y = 15 - ((v - lo)/(hi - lo)) * 15;
+      if(i) ctx.lineTo(x,y); else ctx.moveTo(x,y);
+      ctx.fillRect(x,y,1,1);          // <-- dot so 1-sample still visible
     });
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    icon.href = cvs.toDataURL('image/png');
-  }catch{/* keep last favicon on failure */}
+    icon.href = cvs.toDataURL('image/png');   // forces cache-bust
+  }catch(e){
+    console.warn('price fetch failed',e);
+  }
 }
 ping();
 setInterval(ping,30_000);
 </script>
-</body>
-</html>
