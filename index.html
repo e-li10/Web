@@ -61,17 +61,17 @@ h1 a{color:inherit;text-decoration:none}
 </head>
 
 <body>
-<time id="clock"></time>
+<!-- live Eastern-time clock -->
+<time id="clock" aria-label="Current time" datetime=""></time>
 
 <main>
   <img id="hero"
        src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
-       width="131" height="131" fetchpriority="high"
+       width="131" height="131"
        alt="Louis Lozowick, New York (1923)">
 
   <h1><a href="https://www.linkedin.com/in/eric-li-226850249/" target="_blank" rel="noopener">Eric Li</a></h1>
 
-  <!-- new twin links -->
   <div id="links">
     <a href="thoughts.html">Thoughts</a>
     <a href="mailto:eric_li1@college.harvard.edu">Contact</a>
@@ -80,10 +80,61 @@ h1 a{color:inherit;text-decoration:none}
   <hr class="divider">
 </main>
 
+<!-- clock script -->
 <script>
-const clk=document.getElementById('clock');
-function tick(){clk.textContent=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())}
-tick();setInterval(tick,1000);
+const clk = document.getElementById('clock');
+function tick(){
+  const now = new Date();
+  clk.textContent = new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/New_York',
+    hour12:false,
+    hour:'2-digit',minute:'2-digit',second:'2-digit'
+  }).format(now);
+  clk.dateTime = now.toISOString();
+}
+tick();
+setInterval(tick,1000);
+</script>
+
+<!-- favicon-sparkline script -->
+<script>
+const icon = document.createElement('link');
+icon.rel  = 'icon';
+icon.type = 'image/png';
+document.head.appendChild(icon);
+
+const cvs  = document.createElement('canvas');
+cvs.width  = cvs.height = 16;
+const ctx  = cvs.getContext('2d');
+const tape = [];                     // rolling price memory (120 × 30 s ≈ 1 h)
+
+async function ping(){
+  try{
+    const r = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
+    );
+    const p = (await r.json()).ethereum.usd;
+    tape.push(p);
+    if(tape.length > 120) tape.shift();        // keep last 120 samples ≈ 1 h
+
+    // normalise to 0–15px
+    const hi = Math.max(...tape), lo = Math.min(...tape)||1;
+    ctx.clearRect(0,0,16,16);
+    ctx.beginPath();
+    tape.forEach((v,i)=>{
+      const x = i * 16 / (tape.length-1);
+      const y = 15 - ((v - lo) / (hi - lo)) * 15;
+      i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    });
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    icon.href = cvs.toDataURL('image/png');
+  }catch{/* keep last favicon on failure */}
+}
+ping();
+setInterval(ping,30_000);
 </script>
 </body>
 </html>
