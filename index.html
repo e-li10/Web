@@ -82,84 +82,104 @@ h1 a{color:inherit;text-decoration:none}
 
 <!-- clock script -->
 <script>
-const clk = document.getElementById('clock');
+const clk=document.getElementById('clock');
 function tick(){
-  const now = new Date();
-  clk.textContent = new Intl.DateTimeFormat('en-US',{
+  const now=new Date();
+  clk.textContent=new Intl.DateTimeFormat('en-US',{
     timeZone:'America/New_York',
     hour12:false,
     hour:'2-digit',minute:'2-digit',second:'2-digit'
   }).format(now);
-  clk.dateTime = now.toISOString();
+  clk.dateTime=now.toISOString();
 }
 tick();
 setInterval(tick,1000);
 </script>
 
-<!-- favicon sparkline -->
+<!-- favicon sparkline with instant placeholder -->
 <script>
-const icon = document.createElement('link');
-icon.rel   = 'icon';
-icon.type  = 'image/png';
-icon.sizes = '16x16';
+/* ---------- setup ---------- */
+const icon=document.createElement('link');
+icon.rel='icon';
+icon.type='image/png';
+icon.sizes='16x16';
 document.head.appendChild(icon);
 
-const cvs = document.createElement('canvas');
-cvs.width = cvs.height = 16;
-const ctx = cvs.getContext('2d');
+const cvs=document.createElement('canvas');
+cvs.width=cvs.height=16;
+const ctx=cvs.getContext('2d');
 
-const TAPE_LEN = 20;               // 20 points → visible instantly
-const tape = [];
+/* ---------- state ---------- */
+const LEN=20;              // points shown
+let tape=[];               // price series
+let seeded=false;          // true = placeholder
 
-/* fetch spot from Coinbase (CORS-friendly, <1 kB) */
+/* ---------- helpers ---------- */
 async function fetchPrice(){
-  const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
+  const r=await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
   return +((await r.json()).data.amount);
 }
 
-function draw(){
-  const hi = Math.max(...tape);
-  const lo = Math.min(...tape) || 1;
+function randomWalk(base){
+  const arr=[]; const vol=base*0.005; let v=base;
+  for(let i=0;i<LEN;i++){ v+=(Math.random()*2-1)*vol; arr.push(v); }
+  return arr;
+}
 
+function draw(){
+  const hi=Math.max(...tape), lo=Math.min(...tape)||1;
   ctx.clearRect(0,0,16,16);
   ctx.beginPath();
   tape.forEach((v,i)=>{
-    const x = i * 16 / (tape.length - 1);
-    const y = 15 - ((v - lo)/(hi - lo))*15;
-    i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    const x=i*16/(LEN-1);
+    const y=15-((v-lo)/(hi-lo))*15;
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
   });
-
-  /* color by direction */
-  const diff = tape[tape.length-1] - tape[tape.length-2] || 0;
-  ctx.strokeStyle = diff > 0 ? '#0a0' : diff < 0 ? '#c00' : '#555';
-  ctx.lineWidth   = 1;
+  const diff=tape.at(-1)-tape.at(-2)||0;
+  ctx.strokeStyle=diff>0?'#0a0':diff<0?'#c00':'#555';
+  ctx.lineWidth=1;
   ctx.stroke();
-
-  icon.href = cvs.toDataURL('image/png');
+  icon.href=cvs.toDataURL('image/png');
 }
 
+/* ---------- updater ---------- */
 async function update(){
   try{
-    const price = await fetchPrice();
+    const price=await fetchPrice();
 
-    if(!tape.length){
-      /* seed tape with a flat line so spark is visible immediately */
-      for(let i=0;i<TAPE_LEN;i++) tape.push(price);
+    if(seeded||!tape.length){
+      tape=Array(LEN).fill(price);   // wipe placeholder or empty start
+      seeded=false;
     }else{
-      tape.push(price);
-      if(tape.length > TAPE_LEN) tape.shift();
+      tape.push(price); tape.shift();
     }
 
     draw();
-    /* rounded price in title: “Ξ 3 482, Eric Li” */
-    document.title = `Ξ ${Math.round(price).toLocaleString('en-US')} USD`;
-  }catch(e){
-    console.warn('price fetch failed',e);
+    document.title=`Ξ ${Math.round(price).toLocaleString('en-US')} USD • Eric Li`;
+    return true;
+  }catch{
+    if(!tape.length){               // first call failed → placeholder
+      tape=randomWalk(3000);
+      seeded=true;
+      draw();
+    }
+    console.warn('price fetch failed');
+    return false;
   }
 }
 
-update();
-setInterval(update,30_000);        // refresh every 30 s
+/* ---------- poll logic ---------- */
+(async()=>{
+  let ok=await update();
+  if(!ok){
+    const fast=setInterval(async()=>{
+      ok=await update();
+      if(ok){ clearInterval(fast); setInterval(update,30_000); }
+    },5000);                         // retry every 5 s until success
+  }else{
+    setInterval(update,30_000);      // 30-second cadence
+  }
+})();
 </script>
 </body>
 </html>
