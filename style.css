@@ -1,4 +1,4 @@
-:root {
+:root{
   --pad: 3.5rem;
   --text: #222;
 }
@@ -53,8 +53,8 @@ nav a:hover {
   max-width: 1200px;
   height: 240px;
   pointer-events: none;
-  border: 1px solid var(--text); /* keep this so you can see the canvas */
-  background: #111;              /* dark until the RD shader starts drawing */
+  border: 1px solid var(--text); /* keep this so you see the canvas */
+  background: #111;              /* dark until the RD kicks in */
 }
 
 /* Clock */
