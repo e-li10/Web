@@ -14,25 +14,17 @@
 <link
   rel="preload"
   as="image"
-  href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
-  imagesrcset="
-    https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=512 512w,
-    https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960 960w"
-  imagesizes="131px"
-/>
+  href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
 
 <style>
-/* ---------- reset ---------- */
 *{margin:0;padding:0;box-sizing:border-box}
 
-/* ---------- shared values ---------- */
 :root{
   --ink:#444;
   --stack-width:680px;
   --top-space:45px;
 }
 
-/* ---------- layout ---------- */
 body{
   font-family:'Cormorant Garamond',serif;
   color:var(--ink);
@@ -47,7 +39,7 @@ main{
   margin:var(--top-space) auto 0;
 }
 
-/* header image */
+/* image */
 #hero{
   width:131px;
   height:auto;
@@ -56,30 +48,14 @@ main{
   object-fit:cover;
 }
 
-/* name */
+/* name – now a link */
 h1{
   font-size:60px;
   font-weight:400;
   letter-spacing:.01em;
   margin-bottom:24px;
 }
-
-/* navigation */
-nav{
-  display:flex;
-  justify-content:center;
-  gap:94px;            /* 100 → 96  (links 2 px closer) */
-  font-size:22px;
-  transform:translateX(6px);   /* 14 → 6  (row pulled back left) */
-}
-  
-nav a{
-  color:var(--ink);
-  text-decoration:none;
-  letter-spacing:.04em;
-  transition:opacity .25s;
-}
-nav a:hover{opacity:.6}
+h1 a{color:inherit;text-decoration:none}
 
 /* hair-line divider */
 .divider{
@@ -87,7 +63,6 @@ nav a:hover{opacity:.6}
   margin:90px auto 0;
   border:none;
   border-top:1px solid var(--ink);
-  transform:translateX(14px);   /* keep line aligned with nav */
 }
 
 /* clock */
@@ -95,13 +70,10 @@ nav a:hover{opacity:.6}
   position:fixed;
   top:15px;
   right:28px;
-  font-family:'Cormorant Garamond',serif;
-  font-weight:400;
-  font-size:18px;
+  font:400 18px 'Cormorant Garamond',serif;
   color:var(--ink);
 }
 
-/* fade-in keyframes */
 @keyframes fade{to{opacity:1}}
 </style>
 </head>
@@ -110,29 +82,19 @@ nav a:hover{opacity:.6}
 <time id="clock"></time>
 
 <main>
-  <!-- Louis Lozowick – New York (1923) -->
   <img id="hero"
        src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
-       srcset="
-         https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=512 512w,
-         https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960 960w"
-       sizes="131px"
        width="131" height="131"
        fetchpriority="high"
        alt="Louis Lozowick, New York (1923)">
 
-  <h1>Eric Li</h1>
-
-  <nav>
-    <a href="/">Home</a>
-    <a href="/ideas">Ideas</a>
-  </nav>
+  <!-- link wraps the name -->
+  <h1><a href="blank.html">Eric Li</a></h1>
 
   <hr class="divider">
 </main>
 
 <script>
-/* 24-hour Eastern Time clock */
 const clk=document.getElementById('clock');
 function tick(){
   clk.textContent=new Intl.DateTimeFormat('en-US',{
