@@ -2,27 +2,118 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Eric Li, Thoughts </title>
+<title>Eric Li, Thoughts</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
+<!-- Cormorant Garamond -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Cormorant Garamond',serif}
-#clock{
-  position:fixed;top:15px;right:28px;
-  font:400 18px 'Cormorant Garamond',serif;
+body{
+  font-family:'Cormorant Garamond',serif;
   color:#444;
+  line-height:1.45;
 }
+/* fixed clock (mirrors home page) */
+#clock{
+  position:fixed;
+  top:15px;right:28px;
+  font:400 18px 'Cormorant Garamond',serif;
+}
+
+/* page scaffold – centre any prose you add later */
+main{max-width:680px;margin:100px auto 0;padding:0 24px;text-align:left}
 </style>
 </head>
+
 <body>
-<time id="clock"></time>
+<!-- Eastern-time clock -->
+<time id="clock" aria-label="Current time" datetime=""></time>
+
+<main>
+  <h1 style="font-weight:400;font-size:46px;margin-bottom:40px">Thoughts</h1>
+  <!-- add your essays / posts below -->
+</main>
+
+<!-- clock script -->
 <script>
-const c=document.getElementById('clock');
-function t(){c.textContent=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())}
-t();setInterval(t,1000);
+const clk = document.getElementById('clock');
+function tick(){
+  const now = new Date();
+  clk.textContent = new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/New_York',
+    hour12:false,
+    hour:'2-digit',minute:'2-digit',second:'2-digit'
+  }).format(now);
+  clk.dateTime = now.toISOString();
+}
+tick();
+setInterval(tick,1000);
+</script>
+
+<!-- favicon sparkline (identical logic to home page) -->
+<script>
+const icon = document.createElement('link');
+icon.rel   = 'icon';
+icon.type  = 'image/png';
+icon.sizes = '16x16';
+document.head.appendChild(icon);
+
+const cvs = document.createElement('canvas');
+cvs.width = cvs.height = 16;
+const ctx = cvs.getContext('2d');
+
+const TAPE_LEN = 20;                  // 20 pts → visible instantly
+const tape = [];
+
+async function fetchPrice(){
+  const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
+  return +((await r.json()).data.amount);
+}
+
+function drawSpark(){
+  const hi = Math.max(...tape);
+  const lo = Math.min(...tape) || 1;
+
+  ctx.clearRect(0,0,16,16);
+  ctx.beginPath();
+  tape.forEach((v,i)=>{
+    const x = i * 16 / (tape.length-1);
+    const y = 15 - ((v - lo)/(hi - lo))*15;
+    i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+  });
+
+  const diff = tape[tape.length-1] - tape[tape.length-2] || 0;
+  ctx.strokeStyle = diff>0 ? '#0a0' : diff<0 ? '#c00' : '#555';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  icon.href = cvs.toDataURL('image/png');
+}
+
+async function update(){
+  try{
+    const price = await fetchPrice();
+
+    if(!tape.length){
+      for(let i=0;i<TAPE_LEN;i++) tape.push(price);  // seed flat line
+    }else{
+      tape.push(price);
+      if(tape.length > TAPE_LEN) tape.shift();
+    }
+
+    drawSpark();
+    document.title = `Ξ ${Math.round(price).toLocaleString('en-US')} • Eric Li • Thoughts`;
+  }catch(e){
+    console.warn('price fetch failed',e);
+  }
+}
+
+update();
+setInterval(update,30_000);
 </script>
 </body>
 </html>
