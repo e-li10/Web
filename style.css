@@ -1,23 +1,24 @@
 /* reset */
 *{margin:0;padding:0;box-sizing:border-box}
 
-/* palette + rhythm */
+/* shared values */
 :root{
-  --text:#2c2d2e;           /* charcoal used everywhere */
-  --space:32px;             /* baseline spacing unit */
+  --charcoal:#2c2d2e;   /* text colour */
+  --space:32px;         /* consistent vertical rhythm */
 }
 
-/* layout */
+/* page */
 body{
   font-family:'Cormorant Garamond',serif;
-  color:var(--text);
+  color:var(--charcoal);
   text-align:center;
   line-height:1.45;
   padding-top:var(--space);
 }
 
+/* centred stack */
 .column{
-  max-width:680px;          /* reference column width */
+  max-width:680px;      /* width */
   margin:0 auto;
 }
 
@@ -32,42 +33,35 @@ body{
 
 /* name */
 h1{
-  font-size:64px;           /* identical size */
-  font-weight:400;          /* same light boldness */
+  font-size:64px;       /* ok */
+  font-weight:400;
   letter-spacing:.01em;
-  margin-bottom:24px;       /* reference gap to nav */
+  margin-bottom:24px;   /* gap before nav */
 }
 
 /* navigation */
 nav{
   display:flex;
   justify-content:center;
-  gap:96px;                 /* keeps group centered */
-  margin-bottom:var(--space);
+  gap:110px;            /* visual balance under name */
 }
 
 nav a{
   font-size:22px;
-  color:var(--text);
+  font-weight:400;
+  color:var(--charcoal);
   text-decoration:none;
   letter-spacing:.04em;
   transition:opacity .25s;
 }
+
 nav a:hover{opacity:.6}
 
-/* divider */
-.divider{
-  width:70%;
-  margin:var(--space) auto;
-  border:none;
-  border-top:2px solid var(--text); /* thickness + colour match */
-}
-
-/* clock (slightly larger) */
+/* clock */
 #clock{
   position:fixed;
-  top:12px;
-  right:24px;
-  font-size:18px;           /* +2 px over original */
-  color:#60686f;
+  top:14px;
+  right:26px;
+  font-size:18px;       /* a touch larger, same font */
+  color:var(--charcoal);
 }
