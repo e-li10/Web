@@ -2,26 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Eric Li</title>
+<title>Eric Li</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<!-- identical typeface -->
+<!-- same typeface/weights as the reference -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
 <style>
-/* --- reset --- */
+/* ---------- reset ---------- */
 *{margin:0;padding:0;box-sizing:border-box}
 
-/* --- palette & rhythm --- */
+/* ---------- shared values ---------- */
 :root{
-  --charcoal:#2c2d2e;
-  --top-space:35px;      /* space above image (matches spacer) */
-  --stack-width:680px;   /* same column width */
+  --charcoal:#2c2d2e;     /* reference text colour */
+  --top-space:45px;       /* moved stack down a touch */
+  --stack-width:680px;    /* column width from capture */
 }
 
-/* --- layout --- */
+/* ---------- layout ---------- */
 body{
   font-family:'Cormorant Garamond',serif;
   color:var(--charcoal);
@@ -34,29 +34,29 @@ main{
   margin:var(--top-space) auto 0;
 }
 
-/* hero image: 131 px wide in the WP block (height auto) */
+/* hero image (exact width from WP code) */
 #hero{
   width:131px;
   height:auto;
   display:block;
-  margin:0 auto 5px;     /* 5 px spacer block in original */
+  margin:0 auto 5px;      /* 5 px gap to name */
   object-fit:cover;
 }
 
 /* name */
 h1{
-  font-size:64px;        /* exact WP default for H1 in Seedlet */
+  font-size:60px;         /* hair smaller than 64 */
   font-weight:400;
   letter-spacing:.01em;
-  margin-bottom:35px;    /* same gap before nav */
+  margin-bottom:24px;
 }
 
-/* nav row */
+/* navigation */
 nav{
   display:flex;
   justify-content:center;
-  gap:110px;             /* tuned so “Home  Thoughts” line up */
-  font-size:22px;        /* Seedlet’s normal size class */
+  gap:100px;              /* links slightly closer */
+  font-size:22px;
 }
 
 nav a{
@@ -67,14 +67,13 @@ nav a{
 }
 nav a:hover{opacity:.6}
 
-/* clock */
+/* live clock */
 #clock{
   position:fixed;
   top:15px;
   right:28px;
-  font-size:18px;        /* slightly larger, same font */
-  font-weight:400;
-  font-family:'Cormorant Garamond',serif;
+  font-size:18px;         /* 2 px larger, same font */
+  font-family:'Cormorant Garamond',serif;
   color:var(--charcoal);
 }
 </style>
@@ -84,9 +83,12 @@ nav a:hover{opacity:.6}
 <time id="clock"></time>
 
 <main>
-  <img id="hero" src="https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=512&q=80" alt="Header image">
+  <!-- static, high‑quality Lozowick image (public domain, Smithsonian) -->
+  <img id="hero"
+       src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=1500"
+       alt="Louis Lozowick – New York, 1923 lithograph">
 
-  <h1>Eric Li</h1>
+  <h1>Eric Li</h1>
 
   <nav>
     <a href="/">Home</a>
@@ -95,15 +97,7 @@ nav a:hover{opacity:.6}
 </main>
 
 <script>
-/* rotate image each load (optional) */
-const pics=[
-  'https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=512&q=80',
-  'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=512&q=80',
-  'https://images.unsplash.com/photo-1505664063602-ad8dcead31b1?auto=format&fit=crop&w=512&q=80'
-];
-document.getElementById('hero').src=pics[Math.floor(Math.random()*pics.length)];
-
-/* live 24-hour Eastern Time clock */
+/* live 24‑hour clock, Eastern Time */
 const clk=document.getElementById('clock');
 function tick(){
   clk.textContent=new Intl.DateTimeFormat('en-US',{
