@@ -53,8 +53,15 @@ nav a:hover {
   max-width: 1200px;
   height: 240px;
   pointer-events: none;
-  border: 1px solid var(--text); /* keep the edge visible */
-  background: #111;              /* dark until the shader draws */
+
+  /* keep this so you can see the canvas edge */
+  border: 1px solid var(--text);
+
+  /* dark until the RD kicks in */
+  background: #111;
+
+  /* when we scale up the tiny grid, keep pixels sharp */
+  image-rendering: pixelated;
 }
 
 /* Clock */
