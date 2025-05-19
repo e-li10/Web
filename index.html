@@ -96,42 +96,39 @@ tick();
 setInterval(tick,1000);
 </script>
 
-<!-- favicon sparkline (instant random → real after 30 s) -->
+<!-- favicon sparkline: instant placeholder, real price in title from the start -->
 <script>
-/* ---------- DOM setup ---------- */
+/* ---------- DOM plumbing ---------- */
 const icon = document.createElement('link');
 icon.rel   = 'icon';
 icon.type  = 'image/png';
 icon.sizes = '16x16';
 document.head.appendChild(icon);
 
-const cvs  = document.createElement('canvas');
-cvs.width  = cvs.height = 16;
-const ctx  = cvs.getContext('2d');
+const cvs = document.createElement('canvas');
+cvs.width = cvs.height = 16;
+const ctx = cvs.getContext('2d');
 
 /* ---------- config & state ---------- */
-const LEN = 20;                     // points in the sparkline
-let tape = [];                      // rolling price series
-let liveMode = false;               // false = placeholder, true = on-chain
-const BASE = 3000 + Math.random()*500; // arbitrary centre for fake walk
+const LEN = 20;                      // points in the sparkline
+let tape = [];                       // price series
+let seeded = true;                   // placeholder flag
 
 /* ---------- helpers ---------- */
-function randomWalk(base){
-  const out = [];
-  const vol = base * 0.005;         // ±0.5 %
-  let v = base;
-  for(let i = 0; i < LEN; i++){
-    v += (Math.random()*2 - 1) * vol;
-    out.push(v);
-  }
-  return out;
-}
-
 async function fetchPrice(){
   const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
   return +((await r.json()).data.amount);
 }
-
+function randomWalk(base){
+  const arr = [];
+  const vol = base * 0.005;          // ±0.5 %
+  let v = base;
+  for(let i = 0; i < LEN; i++){
+    v += (Math.random()*2 - 1) * vol;
+    arr.push(v);
+  }
+  return arr;
+}
 function draw(){
   const hi = Math.max(...tape), lo = Math.min(...tape) || 1;
   ctx.clearRect(0,0,16,16);
@@ -143,37 +140,43 @@ function draw(){
   });
   const diff = tape.at(-1) - tape.at(-2) || 0;
   ctx.strokeStyle = diff > 0 ? '#0a0' : diff < 0 ? '#c00' : '#555';
-  ctx.lineWidth = 1;
+  ctx.lineWidth   = 1;
   ctx.stroke();
   icon.href = cvs.toDataURL('image/png');
 }
 
-/* ---------- initialise with random graph ---------- */
-tape = randomWalk(BASE);
-draw();
+/* ---------- initialise ---------- */
+(async ()=>{
+  /* try to get a real price right away */
+  let price;
+  try{ price = await fetchPrice(); } catch{ /* network hiccup */ }
 
-/* ---------- upgrade to real data after 30 s ---------- */
-setTimeout(async () => {
-  liveMode = true;                  // flip the flag
+  /* title uses the real price if we have it, placeholder “Ξ —” otherwise */
+  document.title = price
+    ? `Ξ ${Math.round(price).toLocaleString('en-US')} USD`
+    : 'Ξ —';
 
-  // first real fetch replaces the tape entirely
-  const price = await fetchPrice().catch(()=>null);
-  tape = price ? Array(LEN).fill(price) : randomWalk(BASE);
-  draw();
-  if(price){
-    document.title = `Ξ ${Math.round(price).toLocaleString('en-US')} USD`;
-  }
+  /* seed the tape with a random-walk around whatever we have */
+  const base = price || (3000 + Math.random()*500);
+  tape = randomWalk(base);
+  draw();                              // placeholder icon now visible
 
-  /* start normal 30-second cadence */
-  setInterval(async () => {
+  /* ---------- 30-second cadence ---------- */
+  setInterval(async ()=>{
     try{
       const p = await fetchPrice();
-      tape.push(p); tape.shift();
-      draw();
       document.title = `Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
+
+      if(seeded){                      // first successful tick → go live
+        tape = Array(LEN).fill(p);     // wipe placeholder
+        seeded = false;
+      }else{
+        tape.push(p); tape.shift();
+      }
+      draw();
     }catch{
       console.warn('price fetch failed');
     }
   }, 30_000);
-}, 30_000);
+})();
 </script>
