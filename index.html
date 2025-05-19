@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -24,7 +24,6 @@
   <time id="clock"></time>
 
   <script>
-    /* Random header image */
     const pics = [
       "https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1505664063602-ad8dcead31b1?auto=format&fit=crop&w=800&q=80",
@@ -33,7 +32,6 @@
     document.getElementById("hero").src =
       pics[Math.floor(Math.random() * pics.length)];
 
-    /* Live 24-hour Eastern Time clock */
     const clock = document.getElementById("clock");
     function renderClock() {
       clock.textContent = new Intl.DateTimeFormat("en-US", {
