@@ -51,33 +51,29 @@
   <script>
   (function(){
     const cvs = document.getElementById('rd');
-
-    // 1) Try WebGL2 first (float-render targets are core there)
-    let gl = cvs.getContext('webgl2');
-    const isWebGL2 = !!gl;
-
-    // 2) Fallback to WebGL1
-    if (!gl) {
-      gl = cvs.getContext('webgl');
-    }
+    // Try WebGL2, else WebGL1
+    const gl2 = cvs.getContext('webgl2');
+    const gl  = gl2 || cvs.getContext('webgl');
     if (!gl) {
       console.error('WebGL not supported');
       return;
     }
+    const isWebGL2 = !!gl2;
 
-    // 3) If still on WebGL1, require the float-buffer extension
+    // **Always** require the float-buffer extension for render-to-float on both contexts
+    const extFloatBuffer = gl.getExtension('EXT_color_buffer_float')
+                          || gl.getExtension('WEBGL_color_buffer_float');
+    if (!extFloatBuffer) {
+      console.warn('EXT_color_buffer_float not available; aborting RD.');
+      return;
+    }
+    // On WebGL1 you still need these to work with float textures
     if (!isWebGL2) {
-      const ext = gl.getExtension('EXT_color_buffer_float')
-                || gl.getExtension('WEBGL_color_buffer_float');
-      if (!ext) {
-        console.warn('Float-buffer extension unavailable; aborting RD.');
-        return;
-      }
       gl.getExtension('OES_texture_float');
       gl.getExtension('OES_texture_float_linear');
     }
 
-    // Resize canvas to 80vw × 240px
+    // Resize to 80vw × 240px
     function resize(){
       cvs.width  = innerWidth * 0.8 | 0;
       cvs.height = 240;
@@ -86,7 +82,7 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // Shaders
+    // Shader sources (unchanged)
     const vsSrc = `
       attribute vec2 a;
       void main(){ gl_Position = vec4(a,0,1); }
@@ -117,7 +113,7 @@
         gl_FragColor = vec4(A,B,0,1);
       }
     `;
-    function compile(src, type) {
+    function compile(src, type){
       const s = gl.createShader(type);
       gl.shaderSource(s, src);
       gl.compileShader(s);
@@ -129,7 +125,7 @@
     gl.linkProgram(prog);
     gl.useProgram(prog);
 
-    // Uniforms
+    // Set uniforms
     gl.uniform1i(gl.getUniformLocation(prog, 'prev'), 0);
     gl.uniform2f(gl.getUniformLocation(prog, 'texSize'),
                  cvs.width, cvs.height);
@@ -140,8 +136,7 @@
     // Full-screen quad
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
+    gl.bufferData(gl.ARRAY_BUFFER,
       new Float32Array([-1,-1, 1,-1, -1,1,  -1,1, 1,-1, 1,1]),
       gl.STATIC_DRAW
     );
@@ -149,11 +144,11 @@
     gl.enableVertexAttribArray(aLoc);
     gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
 
-    // Decide internal format: RGBA32F on WebGL2, RGBA on WebGL1
+    // Choose internal format
     const internalFormat = isWebGL2 ? gl.RGBA32F : gl.RGBA;
 
-    // Create two float textures + FBOs for ping-pong
-    function makeTex() {
+    // Create float textures & FBOs
+    function makeTex(){
       const t = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, t);
       gl.texImage2D(
@@ -168,7 +163,7 @@
     const texA = makeTex(), texB = makeTex();
     const fboA = gl.createFramebuffer(), fboB = gl.createFramebuffer();
 
-    // Seed A=1 everywhere, B=1 in a small square
+    // Seed initial A/B
     const seed = new Float32Array(cvs.width * cvs.height * 4);
     for (let y = 0; y < cvs.height; y++) {
       for (let x = 0; x < cvs.width; x++) {
@@ -188,10 +183,10 @@
       gl.RGBA, gl.FLOAT, seed
     );
 
+    // Ping-pong
     let pingTex = texA, pongTex = texB;
     let pingFBO = fboA, pongFBO = fboB;
 
-    // Render loop
     function step(){
       // write into pongFBO
       gl.bindFramebuffer(gl.FRAMEBUFFER, pongFBO);
