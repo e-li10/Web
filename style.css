@@ -1,75 +1,74 @@
-/* --- reset --- */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* reset */
+*{margin:0;padding:0;box-sizing:border-box}
 
-/* --- rhythm & palette --- */
-:root {
-  --space: 32px;
-  --text-dark: #232323;
-  --text-muted: #555;
-  --text-faint: #666;
+/* palette + spacing */
+:root{
+  --space:24px;               /* tighter vertical rhythm */
+  --dark:#242424;
+  --muted:#444;
+  --faint:#666;
 }
 
-/* --- layout --- */
-body {
-  font-family: 'Cormorant Garamond', serif;
-  color: var(--text-dark);
-  text-align: center;
-  line-height: 1.45;
-  padding-top: var(--space);
-  opacity: 0;
-  animation: fade .6s ease .1s forwards;
+/* layout */
+body{
+  font-family:'Cormorant Garamond',serif;
+  color:var(--dark);
+  text-align:center;
+  line-height:1.4;
+  padding-top:var(--space);
+  opacity:0;
+  animation:fade .5s ease .1s forwards;
 }
 
-.container {
-  max-width: 640px;
-  margin: 0 auto;
+.container{
+  max-width:560px;            /* narrower column */
+  margin:0 auto;
 }
 
-/* --- hero image --- */
-#hero {
-  width: 200px;
-  height: 200px;
-  object-fit: cover;
-  display: block;
-  margin: 0 auto var(--space);
+/* hero image */
+#hero{
+  width:180px;                /* smaller hero */
+  height:180px;
+  object-fit:cover;
+  display:block;
+  margin:0 auto var(--space);
 }
 
-/* --- name --- */
-h1 {
-  font-size: 56px;
-  font-weight: 400;
-  letter-spacing: .01em;
-  margin-bottom: var(--space);
+/* name */
+h1{
+  font-size:48px;             /* down from 56 */
+  font-weight:400;
+  letter-spacing:.01em;
+  margin-bottom:var(--space);
 }
 
-/* --- navigation --- */
-nav {
-  display: flex;
-  justify-content: center;
-  gap: 72px;
-  margin-bottom: var(--space);
+/* navigation */
+nav{
+  display:flex;
+  justify-content:center;
+  gap:64px;                   /* keep it even under the name */
+  margin-bottom:var(--space);
 }
 
-nav a {
-  font-size: 24px;
-  color: var(--text-muted);
-  text-decoration: none;
-  letter-spacing: .04em;
-  transition: opacity .25s;
+nav a{
+  font-size:22px;             /* lighter touch */
+  font-weight:300;
+  color:var(--muted);
+  text-decoration:none;
+  letter-spacing:.03em;
+  transition:opacity .25s;
 }
 
-nav a:hover {
-  opacity: .6;
+nav a:hover{opacity:.6}
+
+/* clock */
+#clock{
+  position:fixed;
+  top:10px;
+  right:20px;
+  font-size:12px;
+  color:var(--faint);
 }
 
-/* --- clock --- */
-#clock {
-  position: fixed;
-  top: 12px;
-  right: 20px;
-  font-size: 12px;
-  color: var(--text-faint);
-}
-
-/* --- subtle fade-in --- */
-@keyframes fade { to { opacity: 1; } }
+/* subtle fade-in */
+@keyframes fade{to{opacity:1}}
