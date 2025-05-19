@@ -43,13 +43,16 @@ nav a{
 }
 nav a:hover{text-decoration:underline;}
 
-#pulse{
-  display:block;
-  margin:3rem auto 0;           /* definitive margin */
-  width:80vw;
-  max-width:1200px;
-  pointer-events:none;
-  border:none;
+/* Decentralized Agent Network canvas */
+#network {
+  display: block;
+  margin: 3rem auto 0;
+  width: 80vw;
+  max-width: 1200px;
+  height: 200px;        /* matches the JS resize */
+  pointer-events: none;
+  border: none;
+}
 }
 
 #clock{
