@@ -45,7 +45,7 @@
       const gl  = cvs.getContext('webgl', {antialias:true});
       const ctx = !gl && cvs.getContext('2d');        // 2-D if WebGL off
 
-      const rpc = 'https://cloudflare-eth.com';
+      const rpc = 'https://rpc.ankr.com/eth';
       const latestHash = async () =>
         fetch(rpc,{
           method:'POST',headers:{'Content-Type':'application/json'},
@@ -56,7 +56,7 @@
 
       /* ------ WebGL path ------ */
       if (gl){
-        const vs=`attribute vec3 p;void main(){gl_PointSize=2.0;gl_Position=vec4(p,1);}`;
+        const vs=`attribute vec3 p;void main(){gl_PointSize=5.0;gl_Position=vec4(p,1);}`;
         const fs=`void main(){gl_FragColor=vec4(0.07,0.07,0.07,1);}`;
         const compile=(src,t)=>{const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);return s;};
         const prog=gl.createProgram();
