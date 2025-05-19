@@ -106,7 +106,7 @@ async function update(){
     }
 
     drawSpark();
-    document.title = `Ξ {Math.round(price).toLocaleString('en-US')} USD`;
+    document.title = `Ξ ${Math.round(price).toLocaleString('en-US')} USD`;
   }catch(e){
     console.warn('price fetch failed',e);
   }
