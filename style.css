@@ -1,45 +1,39 @@
-/* force full-screen and no scroll */
+/* fill viewport, white background, no scroll */
 html, body {
   margin: 0;
+  padding: 0;
   height: 100vh;
   overflow: hidden;
+  background: #ffffff;
 }
 
-:root {
-  --pad: 1.5rem;
-  --text: #eee;
-}
-
-/* layout */
 body {
   font: 400 1rem/1.6 'Inter', sans-serif;
-  color: var(--text);
-  background: #111;
+  color: #222222;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 header {
-  margin-top: 2vh;
+  margin-top: 3vh;
   text-align: center;
   z-index: 1;
 }
 
 h1 {
   font: 600 3.5rem 'Cormorant Garamond', serif;
-  margin: 0 0 1rem;
+  margin: 0 0 0.75rem;
 }
 
 nav {
   display: inline-flex;
   gap: 2rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
-
 nav a {
   font: 400 1.25rem 'Cormorant Garamond', serif;
-  color: var(--text);
+  color: #222222;
   text-decoration: none;
 }
 nav a:hover {
@@ -64,6 +58,14 @@ nav a:hover {
   top: 1rem;
   right: 1.5rem;
   font: 1rem 'Cormorant Garamond', serif;
-  color: var(--text);
+  color: #222222;
   pointer-events: none;
+}
+
+/* mobile tweaks */
+@media (max-width: 600px) {
+  header { margin-top: 5vh; }
+  h1     { font-size: 2.75rem; }
+  nav a  { font-size: 1.1rem; }
+  #clock { font-size: 0.9rem; }
 }
