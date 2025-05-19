@@ -1,4 +1,4 @@
-/* full viewport, white background */
+/* fill viewport, white background, no scroll */
 html, body {
   margin: 0;
   padding: 0;
@@ -15,53 +15,75 @@ body {
   align-items: center;
 }
 
-/* HEADER: pushed down & larger text */
+/* HEADER: shifted further down */
 header {
-  margin-top: 8vh;      /* shift everything down */
+  margin-top: 12vh;
   text-align: center;
   z-index: 1;
 }
+
+/* TITLE: larger bottom gap */
 h1 {
-  font: 600 5rem 'Cormorant Garamond', serif;  /* bigger title */
-  margin: 0 0 1.5rem;
+  font: 600 5rem 'Cormorant Garamond', serif;
+  margin: 0 0 2rem;
 }
+
+/* SUBHEADINGS: larger gap below */
 nav {
   display: inline-flex;
   gap: 2.5rem;
-  margin-bottom: 2rem;
+  margin: 0 0 4rem;
 }
+
 nav a {
-  font: 400 1.6rem 'Cormorant Garamond', serif; /* bigger nav */
+  font: 400 1.6rem 'Cormorant Garamond', serif;
   color: #222;
   text-decoration: none;
 }
-nav a:hover { text-decoration: underline; }
+nav a:hover {
+  text-decoration: underline;
+}
 
-/* ART canvas: reduced height to keep it proportional */
+/* ASCII network canvas */
 #art {
   flex: none;
   width: 90vw;
   max-width: 1200px;
-  height: 40vh;   /* smaller than before */
+  height: 40vh;
   display: block;
   background: #fff;
 }
 
-/* CLOCK: top-right, larger */
+/* Live clock: top-right */
 #clock {
   position: absolute;
-  top: 1rem;    /* unchanged */
+  top: 1rem;
   right: 1.5rem;
-  font: 1.5rem 'Cormorant Garamond', serif; /* bigger clock */
+  font: 1.5rem 'Cormorant Garamond', serif;
   color: #222;
   pointer-events: none;
 }
 
-/* MOBILE */
+/* MOBILE tweaks */
 @media (max-width: 600px) {
-  header { margin-top: 10vh; }
-  h1     { font-size: 3.5rem; }
-  nav a  { font-size: 1.3rem; }
-  #clock { font-size: 1.2rem; }
-  #art   { height: 35vh; }
+  header {
+    margin-top: 14vh;
+  }
+  h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+  }
+  nav {
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+  nav a {
+    font-size: 1.3rem;
+  }
+  #clock {
+    font-size: 1.2rem;
+  }
+  #art {
+    height: 35vh;
+  }
 }
