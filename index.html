@@ -35,42 +35,26 @@ body{
 main{width:var(--stack);margin:var(--top) auto 0}
 
 /* hero */
-#hero{
-  width:131px;height:auto;object-fit:cover;
-  display:block;margin:0 auto 25px;
-}
+#hero{width:131px;height:auto;object-fit:cover;display:block;margin:0 auto 25px}
 
-/* headline */
-h1{
-  font-size:60px;font-weight:400;letter-spacing:.01em;
-  margin-bottom:20px;
-}
+/* name */
+h1{font-size:60px;font-weight:400;letter-spacing:.01em;margin-bottom:20px}
 h1 a{color:inherit;text-decoration:none}
 
-/* Thoughts link */
-#thoughts{
-  font-size:22px;font-weight:400;
-  letter-spacing:.04em;
-  color:var(--ink);
-  text-decoration:none;
-  display:inline-block;
-  margin-bottom:90px;          /* leaves same gap to divider */
-  transition:opacity .25s;
+/* Thoughts & Contact row */
+#links{
+  display:flex;justify-content:center;gap:80px;
+  font-size:22px;font-weight:400;letter-spacing:.04em;
+  margin-bottom:90px;
 }
-#thoughts:hover{opacity:.6}
+#links a{color:var(--ink);text-decoration:none;transition:opacity .25s}
+#links a:hover{opacity:.6}
 
 /* divider */
-.divider{
-  width:70%;margin:0 auto;
-  border:none;border-top:1px solid var(--ink);
-}
+.divider{width:70%;margin:0 auto;border:none;border-top:1px solid var(--ink)}
 
 /* clock */
-#clock{
-  position:fixed;top:15px;right:28px;
-  font:400 18px 'Cormorant Garamond',serif;
-  color:var(--ink);
-}
+#clock{position:fixed;top:15px;right:28px;font:400 18px 'Cormorant Garamond',serif;color:var(--ink)}
 
 @keyframes fade{to{opacity:1}}
 </style>
@@ -80,31 +64,26 @@ h1 a{color:inherit;text-decoration:none}
 <time id="clock"></time>
 
 <main>
-  <!-- Louis Lozowick – New York (1923) -->
   <img id="hero"
        src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
        width="131" height="131" fetchpriority="high"
        alt="Louis Lozowick, New York (1923)">
 
-  <!-- LinkedIn link -->
   <h1><a href="https://www.linkedin.com/in/eric-li-226850249/" target="_blank" rel="noopener">Eric Li</a></h1>
 
-  <!-- Thoughts link -->
-  <a id="thoughts" href="thoughts.html">Thoughts</a>
+  <!-- new twin links -->
+  <div id="links">
+    <a href="blank.html">Thoughts</a>
+    <a href="mailto:eric_li1@college.harvard.edu">Contact</a>
+  </div>
 
   <hr class="divider">
 </main>
 
 <script>
 const clk=document.getElementById('clock');
-function tick(){
-  clk.textContent=new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/New_York',
-    hour12:false,
-    hour:'2-digit',minute:'2-digit',second:'2-digit'
-  }).format(new Date());
-}
-tick(); setInterval(tick,1000);
+function tick(){clk.textContent=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())}
+tick();setInterval(tick,1000);
 </script>
 </body>
 </html>
