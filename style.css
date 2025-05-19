@@ -17,23 +17,13 @@ body {
   align-items: center;
 }
 
-/* Full-screen fluid background canvas */
+/* Crypto-AI network background */
 #bg {
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
   background: transparent;
-
-  /* soft fade-out at edges */
-  mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
-  mask-size: cover;
-  mask-repeat: no-repeat;
-  -webkit-mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
-  -webkit-mask-size: cover;
-  -webkit-mask-repeat: no-repeat;
 }
 
 /* Header */
