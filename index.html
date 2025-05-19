@@ -2,13 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Eric Li</title>
+<title>Eric Li</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<!-- same typeface/weights as the reference -->
+<!-- Cormorant Garamond -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+
+<!-- Preload the Lozowick image so it’s requested during HTML parse -->
+<link
+  rel="preload"
+  as="image"
+  href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
+  imagesrcset="
+    https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=512 512w,
+    https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960 960w"
+  imagesizes="131px"
+/>
 
 <style>
 /* ---------- reset ---------- */
@@ -16,9 +27,9 @@
 
 /* ---------- shared values ---------- */
 :root{
-  --charcoal:#2c2d2e;     /* reference text colour */
-  --top-space:45px;       /* moved stack down a touch */
-  --stack-width:680px;    /* column width from capture */
+  --charcoal:#2c2d2e;
+  --stack-width:680px;
+  --top-space:45px;          /* offset from very top */
 }
 
 /* ---------- layout ---------- */
@@ -34,18 +45,18 @@ main{
   margin:var(--top-space) auto 0;
 }
 
-/* hero image (exact width from WP code) */
+/* header image */
 #hero{
   width:131px;
   height:auto;
   display:block;
-  margin:0 auto 5px;      /* 5 px gap to name */
+  margin:0 auto 25px;        /* gap between image and name */
   object-fit:cover;
 }
 
 /* name */
 h1{
-  font-size:60px;         /* hair smaller than 64 */
+  font-size:60px;
   font-weight:400;
   letter-spacing:.01em;
   margin-bottom:24px;
@@ -55,7 +66,7 @@ h1{
 nav{
   display:flex;
   justify-content:center;
-  gap:100px;              /* links slightly closer */
+  gap:100px;
   font-size:22px;
 }
 
@@ -67,13 +78,14 @@ nav a{
 }
 nav a:hover{opacity:.6}
 
-/* live clock */
+/* clock */
 #clock{
   position:fixed;
   top:15px;
   right:28px;
-  font-size:18px;         /* 2 px larger, same font */
-  font-family:'Cormorant Garamond',serif;
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;
+  font-size:18px;
   color:var(--charcoal);
 }
 </style>
@@ -83,12 +95,19 @@ nav a:hover{opacity:.6}
 <time id="clock"></time>
 
 <main>
-  <!-- static, high‑quality Lozowick image (public domain, Smithsonian) -->
-  <img id="hero"
-       src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=1500"
-       alt="Louis Lozowick – New York, 1923 lithograph">
-
-  <h1>Eric Li</h1>
+  <!-- Louis Lozowick – New York (1923) -->
+  <img
+       id="hero"
+       src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
+       srcset="
+         https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=512 512w,
+         https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960 960w"
+       sizes="131px"
+       width="131" height="131"
+       fetchpriority="high"
+       alt="Louis Lozowick, New York (1923)">
+  
+  <h1>Eric Li</h1>
 
   <nav>
     <a href="/">Home</a>
@@ -97,7 +116,7 @@ nav a:hover{opacity:.6}
 </main>
 
 <script>
-/* live 24‑hour clock, Eastern Time */
+/* 24-hour clock, Eastern Time */
 const clk=document.getElementById('clock');
 function tick(){
   clk.textContent=new Intl.DateTimeFormat('en-US',{
