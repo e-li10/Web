@@ -152,7 +152,7 @@ async function update(){
 
     draw();
     /* rounded price in title: “Ξ 3 482, Eric Li” */
-    document.title = `Ξ ${Math.round(price).toLocaleString('en-US')}`;
+    document.title = `Ξ {Math.round(price).toLocaleString('en-US')} USD`;
   }catch(e){
     console.warn('price fetch failed',e);
   }
