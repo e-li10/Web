@@ -17,24 +17,24 @@ body{
   color:#444;
   line-height:1.45;
 }
-/* fixed clock (mirrors home page) */
+/* clock */
 #clock{
   position:fixed;
   top:15px;right:28px;
   font:400 18px 'Cormorant Garamond',serif;
 }
-/* page scaffold – centre any prose you add later */
+/* layout */
 main{max-width:680px;margin:100px auto 0;padding:0 24px;text-align:left}
+.post{font-size:22px;font-weight:300;margin-bottom:18px}
 </style>
 </head>
 
 <body>
-<!-- Eastern-time clock -->
 <time id="clock" aria-label="Current time" datetime=""></time>
 
 <main>
-  <h1 style="font-weight:400;font-size:46px;margin-bottom:40px">Thoughts</h1>
-  <!-- essays / posts go here -->
+  <div class="post">1. Betting on Truth: InfoFi and the Marketization of Information (05/25)</div>
+  <div class="post">2. Oracles and the Price of Truth (TBD)</div>
 </main>
 
 <!-- clock script -->
@@ -53,9 +53,8 @@ tick();
 setInterval(tick,1000);
 </script>
 
-<!-- favicon sparkline -->
+<!-- favicon sparkline (same logic as before) -->
 <script>
-/* ---------- canvas & link setup ---------- */
 const icon=document.createElement('link');
 icon.rel='icon';
 icon.type='image/png';
@@ -66,79 +65,43 @@ const cvs=document.createElement('canvas');
 cvs.width=cvs.height=16;
 const ctx=cvs.getContext('2d');
 
-/* ---------- sparkline state ---------- */
-const LEN=20;               // points in tape
-let tape=[];                // price series (may start as random)
-let seeded=false;           // true = placeholder, false = real
+const LEN=20;
+let tape=[];
+let seeded=false;
 
-/* ---------- helpers ---------- */
 async function fetchPrice(){
   const r=await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
   return +((await r.json()).data.amount);
 }
-
-function randomWalk(base){
-  const out=[]; const vol=base*0.005; let v=base;
-  for(let i=0;i<LEN;i++){ v+= (Math.random()*2-1)*vol; out.push(v); }
-  return out;
-}
-
+function randomWalk(b){const a=[];const v=b*0.005;let x=b;for(let i=0;i<LEN;i++){x+=(Math.random()*2-1)*v;a.push(x);}return a;}
 function draw(){
-  const hi=Math.max(...tape), lo=Math.min(...tape)||1;
+  const hi=Math.max(...tape),lo=Math.min(...tape)||1;
   ctx.clearRect(0,0,16,16);
   ctx.beginPath();
-  tape.forEach((v,i)=>{
-    const x=i*16/(LEN-1);
-    const y=15-((v-lo)/(hi-lo))*15;
-    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
-  });
-  const diff=tape[LEN-1]-tape[LEN-2]||0;
-  ctx.strokeStyle=diff>0?'#0a0':diff<0?'#c00':'#555';
-  ctx.lineWidth=1;
-  ctx.stroke();
+  tape.forEach((v,i)=>{const x=i*16/(LEN-1);const y=15-((v-lo)/(hi-lo))*15;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+  const d=tape.at(-1)-tape.at(-2)||0;
+  ctx.strokeStyle=d>0?'#0a0':d<0?'#c00':'#555';
+  ctx.lineWidth=1;ctx.stroke();
   icon.href=cvs.toDataURL('image/png');
 }
-
-/* ---------- main updater ---------- */
 async function update(){
   try{
-    const price=await fetchPrice();
-
-    /* first successful fetch: wipe any fake data */
-    if(seeded){
-      tape=Array(LEN).fill(price);
-      seeded=false;
-    }else if(!tape.length){
-      tape=Array(LEN).fill(price);     // instant flat start
-    }else{
-      tape.push(price); tape.shift();
-    }
-
+    const p=await fetchPrice();
+    if(seeded||!tape.length){tape=Array(LEN).fill(p);seeded=false;}
+    else{tape.push(p);tape.shift();}
     draw();
-    document.title=`Ξ ${Math.round(price).toLocaleString('en-US')} USD`;
-    return true;                      // success
+    document.title=`Ξ ${Math.round(p).toLocaleString('en-US')} USD • Thoughts`;
+    return true;
   }catch{
-    if(!tape.length){                 // first call failed → seed placeholder
-      tape=randomWalk(3000);
-      seeded=true;
-      draw();
-    }
-    console.warn('price fetch failed');
-    return false;                     // failure
+    if(!tape.length){tape=randomWalk(3000);seeded=true;draw();}
+    return false;
   }
 }
-
-/* ---------- polling logic ---------- */
 (async()=>{
   let ok=await update();
-  if(!ok){                            // aggressive retry until first success
-    const fast=setInterval(async()=>{
-      ok=await update();
-      if(ok){ clearInterval(fast); setInterval(update,30_000); }
-    },5000);                          // every 5 s
-  }else{
-    setInterval(update,30_000);       // first try already succeeded
-  }
+  if(!ok){
+    const fast=setInterval(async()=>{ok=await update();if(ok){clearInterval(fast);setInterval(update,30000);}},5000);
+  }else{setInterval(update,30000);}
 })();
 </script>
 </body>
