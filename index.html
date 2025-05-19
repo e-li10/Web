@@ -23,78 +23,73 @@
   </header>
 
   <!-- Block Pulse canvas -->
-  <canvas id="pulse" height="180"></canvas>
+  <canvas id="network"></canvas>
 
   <!-- Live Eastern-Time clock -->
   <div id="clock"></div>
 
-  <script>
-    // ───── CLOCK ─────
-    const updateClock = () =>
-      document.getElementById('clock').textContent =
-        new Intl.DateTimeFormat('en-US',{
-          timeZone:'America/New_York',
-          hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'
-        }).format(new Date());
-    updateClock();
-    setInterval(updateClock,1000);
+<script>
+;(function(){
+  const cvs = document.getElementById('network');
+  const ctx = cvs.getContext('2d');
+  const N   = 40;            // number of AI agent nodes
+  const R   = 120;           // max connect distance
 
-    // ───── BLOCK PULSE (WebSocket) ─────
-    (function(){
-      const canvas = document.getElementById('pulse');
-      const ctx    = canvas.getContext('2d');
-      const WS_URL = 'wss://mainnet.infura.io/ws/v3/efcbcda2cca54180b0f7e3007df3a348';
+  // 1) Resize canvas to fit nicely under header
+  function resize(){
+    cvs.width  = window.innerWidth * 0.8 | 0;
+    cvs.height = 200;
+  }
+  window.addEventListener('resize', resize);
+  resize();
 
-      function resize() {
-        canvas.width  = innerWidth * 0.8 | 0;
-        canvas.height = 180;
+  // 2) Init N moving nodes
+  const nodes = Array.from({length:N}, () => ({
+    x: Math.random() * cvs.width,
+    y: Math.random() * cvs.height,
+    vx: (Math.random()*2 -1)*0.3,
+    vy: (Math.random()*2 -1)*0.3
+  }));
+
+  // 3) Animation loop
+  function tick(){
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+
+    // update positions and bounce off edges
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > cvs.width)  n.vx *= -1;
+      if (n.y < 0 || n.y > cvs.height) n.vy *= -1;
+    });
+
+    // draw lines between close nodes
+    for (let i=0;i<N;i++){
+      for (let j=i+1;j<N;j++){
+        const a=nodes[i], b=nodes[j];
+        const dx=b.x - a.x, dy=b.y - a.y;
+        const d2 = dx*dx+dy*dy;
+        if (d2 < R*R){
+          const alpha = 1 - d2/(R*R);
+          ctx.strokeStyle = `rgba(34,34,34,${alpha*0.6})`;
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y);
+          ctx.lineTo(b.x,b.y);
+          ctx.stroke();
+        }
       }
-      window.addEventListener('resize', resize);
-      resize();
+    }
 
-      // render a wavy line from 64-char hex
-      function render(hex) {
-        const bytes = hex.match(/../g).map(h => parseInt(h,16));
-        const { width:w, height:h0 } = canvas;
-        ctx.clearRect(0,0,w,h0);
-        ctx.beginPath();
-        ctx.moveTo(0, h0/2);
-        bytes.forEach((b,i) => {
-          ctx.lineTo(i/32 * w, h0/2 + (b - 128)*0.8);
-        });
-        ctx.strokeStyle = '#111';
-        ctx.lineWidth   = 2.5;
-        ctx.stroke();
-      }
+    // draw each node as a little dot
+    nodes.forEach(n => {
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.arc(n.x,n.y,2.5,0,Math.PI*2);
+      ctx.fill();
+    });
 
-      function randomHex() {
-        return crypto.getRandomValues(new Uint32Array(16))
-          .reduce((s,n) => s + n.toString(16).padStart(8,'0'), '');
-      }
+    requestAnimationFrame(tick);
+  }
 
-      let ws;
-      function connect() {
-        ws = new WebSocket(WS_URL);
-        ws.onopen = () => {
-          ws.send(JSON.stringify({
-            jsonrpc:'2.0',id:1,
-            method:'eth_subscribe',
-            params:['newHeads']
-          }));
-        };
-        ws.onmessage = msg => {
-          const data = JSON.parse(msg.data);
-          if (data.params?.result?.hash) {
-            render(data.params.result.hash.slice(2));
-          }
-        };
-        ws.onerror = ws.onclose = () => {
-          setTimeout(connect,2000);
-          render(randomHex());
-        };
-      }
-      connect();
-    })();
-  </script>
-</body>
-</html>
+  tick();
+})();
+</script>
