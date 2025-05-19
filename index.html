@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Eric Li</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,6 +12,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Cormorant+Garamond:wght@400;600&display=swap"
     rel="stylesheet"
   />
+
+  <!-- Site styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -22,30 +25,84 @@
     </nav>
   </header>
 
-  <!-- Static Art Section -->
-  <div id="art-container">
-    <!-- Point src to your ultra-high-def or pixel-art file -->
-    <img
-      id="art"
-      src="static-art.png"
-      alt="Crypto × AI network"
-    />
-  </div>
+  <!-- static 2D-canvas network -->
+  <canvas id="art"></canvas>
 
+  <!-- live clock -->
   <div id="clock"></div>
+
   <script>
-    // Live Eastern-Time clock
+    // update live Eastern-Time clock
     function updateClock() {
-      document.getElementById('clock').textContent = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/New_York',
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }).format(new Date());
+      document.getElementById('clock').textContent =
+        new Intl.DateTimeFormat('en-US', {
+          timeZone: 'America/New_York',
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }).format(new Date());
     }
     updateClock();
     setInterval(updateClock, 1000);
+  </script>
+
+  <script>
+    // draw static token-mesh network on load
+    window.addEventListener('load', () => {
+      const canvas = document.getElementById('art');
+      const dpr    = window.devicePixelRatio || 1;
+      const W      = canvas.clientWidth;
+      const H      = canvas.clientHeight;
+
+      // size canvas for HD rendering
+      canvas.width  = W * dpr;
+      canvas.height = H * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const CX    = W / 2;
+      const CY    = H / 2;
+      const R     = Math.min(W, H) * 0.4;
+      const NODES = 200;
+      const nodes = [];
+
+      // place nodes around a jittered circle
+      for (let i = 0; i < NODES; i++) {
+        const θ = (i / NODES) * 2 * Math.PI;
+        const r = R * (0.9 + 0.1 * (Math.random() * 2 - 1));
+        nodes.push({
+          x: CX + Math.cos(θ) * r,
+          y: CY + Math.sin(θ) * r
+        });
+      }
+
+      // draw faint neon lines
+      ctx.strokeStyle = 'rgba(0,200,255,0.03)';
+      ctx.lineWidth   = 1;
+      nodes.forEach((a, i) => {
+        for (let j = i + 1; j < NODES; j++) {
+          if (Math.random() < 0.025) {
+            const b = nodes[j];
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      });
+
+      // draw bright nodes
+      ctx.fillStyle = 'rgba(0,200,255,0.8)';
+      nodes.forEach(({ x, y }) => {
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // optional pixel-art effect
+      // canvas.style.imageRendering = 'pixelated';
+    });
   </script>
 </body>
 </html>
