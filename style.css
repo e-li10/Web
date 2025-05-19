@@ -3,14 +3,11 @@
 
 /* palette + rhythm */
 :root{
-  --space:32px;               /* vertical rhythm */
-  --text:#2c2d2e;             /* almost-black charcoal */
-  --nav:#2c2d2e;              /* same tint for nav */
-  --line:#2c2d2e;             /* divider colour */
-  --clock:#60686f;            /* subtle clock tint */
+  --text:#2c2d2e;           /* charcoal used everywhere */
+  --space:32px;             /* baseline spacing unit */
 }
 
-/* page */
+/* layout */
 body{
   font-family:'Cormorant Garamond',serif;
   color:var(--text);
@@ -19,13 +16,12 @@ body{
   padding-top:var(--space);
 }
 
-/* centred column */
 .column{
-  max-width:680px;            /* matches reference width */
+  max-width:680px;          /* reference column width */
   margin:0 auto;
 }
 
-/* hero square */
+/* hero image */
 #hero{
   width:200px;
   height:200px;
@@ -36,24 +32,23 @@ body{
 
 /* name */
 h1{
-  font-size:56px;             /* exact size from reference */
-  font-weight:500;            /* slight boldness */
+  font-size:64px;           /* identical size */
+  font-weight:400;          /* same light boldness */
   letter-spacing:.01em;
-  margin-bottom:var(--space);
+  margin-bottom:24px;       /* reference gap to nav */
 }
 
 /* navigation */
 nav{
   display:flex;
   justify-content:center;
-  gap:96px;                   /* makes Home/Thoughts perfectly centred */
+  gap:96px;                 /* keeps group centered */
   margin-bottom:var(--space);
 }
 
 nav a{
   font-size:22px;
-  font-weight:400;
-  color:var(--nav);
+  color:var(--text);
   text-decoration:none;
   letter-spacing:.04em;
   transition:opacity .25s;
@@ -65,14 +60,14 @@ nav a:hover{opacity:.6}
   width:70%;
   margin:var(--space) auto;
   border:none;
-  border-top:1px solid var(--line);
+  border-top:2px solid var(--text); /* thickness + colour match */
 }
 
-/* clock (2 px larger than original) */
+/* clock (slightly larger) */
 #clock{
   position:fixed;
   top:12px;
   right:24px;
-  font-size:16px;              
-  color:var(--clock);
+  font-size:18px;           /* +2 px over original */
+  color:#60686f;
 }
