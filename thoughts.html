@@ -91,7 +91,7 @@ async function update(){
     if(seeded||!tape.length){tape=Array(LEN).fill(p);seeded=false;}
     else{tape.push(p);tape.shift();}
     draw();
-    document.title=`Ξ ${Math.round(p).toLocaleString('en-US')} USD • Thoughts`;
+    document.title=`Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
     return true;
   }catch{
     if(!tape.length){tape=randomWalk(3000);seeded=true;draw();}
