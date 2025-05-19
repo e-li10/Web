@@ -1,91 +1,44 @@
-/* viewport fill, white background */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100vh;
-  overflow: hidden;
-  background: #fff;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font: 400 1.2rem/1.6 'Inter', sans-serif;
-  color: #222;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Header now shares canvas width and centers content */
-header {
-  width: 90vw;
-  max-width: 1200px;
-  margin: 12vh auto 0;   /* big push-down */
+  font-family: 'Cormorant Garamond', serif;
+  color: #232323;
   text-align: center;
-  z-index: 1;
+  padding-top: 64px;
 }
 
-/* Slightly softer bold, larger text, more breathing room */
-h1 {
-  font: 500 4.5rem 'Cormorant Garamond', serif;
-  margin: 0 0 2rem;
-}
-
-/* Subheadings — centered and extra gap before art */
-nav {
-  display: inline-flex;
-  gap: 2.5rem;
-  margin: 0 0 6rem;      /* extra gap to art */
-}
-nav a {
-  font: 400 1.6rem 'Cormorant Garamond', serif;
-  color: #222;
-  text-decoration: none;
-}
-nav a:hover {
-  text-decoration: underline;
-}
-
-/* ASCII network canvas */
-#art {
-  width: 90vw;
-  max-width: 1200px;
-  height: 40vh;
-  flex: none;
-  background: #fff;
+#hero {
+  width: 240px;
+  height: 240px;
+  object-fit: cover;
   display: block;
+  margin: 0 auto 48px;
 }
 
-/* Live clock top-right */
+h1 {
+  font-size: 64px;
+  font-weight: 400;
+  margin-bottom: 48px;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 88px;          /* even spacing under the name */
+  margin-bottom: 64px;
+}
+
+nav a {
+  font-size: 32px;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity .2s;
+}
+nav a:hover { opacity: .6; }
+
 #clock {
-  position: absolute;
-  top: 1rem;
-  right: 1.5rem;
-  font: 1.5rem 'Cormorant Garamond', serif;
-  color: #222;
-  pointer-events: none;
-}
-
-/* Mobile adjustments */
-@media (max-width: 600px) {
-  header {
-    width: 95vw;
-    margin-top: 14vh;
-  }
-  h1 {
-    font-size: 3.5rem;
-    margin-bottom: 1.5rem;
-  }
-  nav {
-    gap: 2rem;
-    margin-bottom: 4rem;
-  }
-  nav a {
-    font-size: 1.3rem;
-  }
-  #clock {
-    font-size: 1.2rem;
-  }
-  #art {
-    height: 35vh;
-  }
+  position: fixed;
+  top: 12px;
+  right: 20px;
+  font-size: 14px;
 }
