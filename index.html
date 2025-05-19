@@ -155,7 +155,7 @@ async function update(){
     }
 
     draw();
-    document.title=`Ξ ${Math.round(price).toLocaleString('en-US')} USD • Eric Li`;
+    document.title=`Ξ ${Math.round(price).toLocaleString('en-US')} USD`;
     return true;
   }catch{
     if(!tape.length){               // first call failed → placeholder
