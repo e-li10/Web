@@ -27,87 +27,62 @@
   <!-- ASCII-style network -->
   <canvas id="art"></canvas>
 
+  <!-- live clock -->
   <div id="clock"></div>
 
   <script>
-    // Eastern-Time live clock
+    // Eastern-Time clock
     function updateClock() {
-      document.getElementById('clock').textContent =
-        new Intl.DateTimeFormat('en-US', {
-          timeZone: 'America/New_York',
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        }).format(new Date());
+      document.getElementById('clock').textContent = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).format(new Date());
     }
     updateClock();
     setInterval(updateClock, 1000);
   </script>
 
+  <!-- drawing code unchanged -->
   <script>
   window.addEventListener('load', () => {
     const canvas = document.getElementById('art');
     const ctx    = canvas.getContext('2d');
     const dpr    = window.devicePixelRatio || 1;
-
-    // match CSS size & scale for HD
-    const W = canvas.clientWidth, H = canvas.clientHeight;
+    const W      = canvas.clientWidth, H = canvas.clientHeight;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
-    // center & radius
     const CX = W/2, CY = H/2, R = Math.min(W,H)*0.4;
-    const N = 200;              // number of influence nodes
-    const nodes = [];
-
-    // place nodes around jittered circle
-    for (let i=0; i<N; i++) {
-      const θ = (i/N)*2*Math.PI;
-      const r = R*(0.9 + 0.1*(Math.random()*2-1));
-      nodes.push({
-        x: CX + Math.cos(θ)*r,
-        y: CY + Math.sin(θ)*r
-      });
-    }
-
-    // ASCII palette (from light to dark)
-    const chars = [' ', '.', ':', '-', '=', '+', '*', '#', '%', '@'];
-
-    // grid resolution
-    const COLS = 120;
-    const ROWS = Math.round((H/W)*COLS);
-    const cw = W/COLS, ch = H/ROWS;
+    const N = 200, nodes = [], chars = [' ','.',':','-','=','+','*','#','%','@'];
+    const COLS = 120, ROWS = Math.round((H/W)*COLS), cw = W/COLS, ch = H/ROWS;
     ctx.font = `${ch}px monospace`;
     ctx.textBaseline = 'middle';
 
-    // draw each cell
-    for (let row=0; row<ROWS; row++) {
-      for (let col=0; col<COLS; col++) {
-        // cell center
-        const x0 = col * cw + cw/2;
-        const y0 = row * ch + ch/2;
-
-        // compute “influence” from all nodes (crypto×AI consensus!)
-        let sum = 0;
-        for (const n of nodes) {
-          const dx = n.x - x0, dy = n.y - y0;
-          const d  = Math.hypot(dx, dy);
-          sum += Math.max(0, 1 - d/R);
-        }
-        const avg = sum / N;               // 0–1
-        const idx = Math.floor(avg * chars.length);
-        const chn = chars[Math.min(idx, chars.length-1)];
-
-        // draw
-        ctx.fillStyle = '#000';
-        ctx.fillText(chn, col*cw, row*ch + ch/2);
-      }
+    // nodes
+    for (let i=0; i<N; i++) {
+      const θ = (i/N)*2*Math.PI, r = R*(0.9+0.1*(Math.random()*2-1));
+      nodes.push({ x: CX+Math.cos(θ)*r, y: CY+Math.sin(θ)*r });
     }
 
-    // Optional: if you want blocky pixelated text uncomment:
-    // canvas.style.imageRendering = 'pixelated';
+    // grid
+    for (let row=0; row<ROWS; row++) {
+      for (let col=0; col<COLS; col++) {
+        const x0 = col*cw+cw/2, y0 = row*ch+ch/2;
+        let sum=0;
+        for (const n of nodes) {
+          const d = Math.hypot(n.x-x0, n.y-y0);
+          sum += Math.max(0,1-d/R);
+        }
+        const avg = sum/N;
+        const idx = Math.floor(avg*chars.length);
+        ctx.fillStyle = '#000';
+        ctx.fillText(chars[Math.min(idx,chars.length-1)], col*cw, row*ch+ch/2);
+      }
+    }
   });
   </script>
 </body>
