@@ -1,4 +1,4 @@
-/* fill viewport, white background, no scroll */
+/* viewport fill, white background, no scroll */
 html, body {
   margin: 0;
   padding: 0;
@@ -15,8 +15,9 @@ body {
   align-items: center;
 }
 
+/* Header */
 header {
-  margin-top: 3vh;
+  margin-top: 2vh;
   text-align: center;
   z-index: 1;
 }
@@ -40,19 +41,18 @@ nav a:hover {
   text-decoration: underline;
 }
 
-/* full-bleed canvas */
+/* Canvas: fills remaining space */
 #art {
-  width: 100vw;
-  height: 65vh;
+  flex: 1;
+  width: 100%;
   display: block;
-  background: transparent;
   cursor: grab;
 }
 #art:active {
   cursor: grabbing;
 }
 
-/* clock */
+/* Clock */
 #clock {
   position: absolute;
   top: 1rem;
@@ -62,7 +62,7 @@ nav a:hover {
   pointer-events: none;
 }
 
-/* mobile tweaks */
+/* Mobile tweaks */
 @media (max-width: 600px) {
   header { margin-top: 5vh; }
   h1     { font-size: 2.75rem; }
