@@ -1,84 +1,62 @@
-/* fill viewport, white background, no scroll */
+/* fill viewport, white background */
 html, body {
   margin: 0;
   padding: 0;
   height: 100vh;
   overflow: hidden;
-  background: #ffffff;
+  background: #fff;
 }
 
 body {
   font: 400 1rem/1.6 'Inter', sans-serif;
-  color: #222222;
+  color: #222;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Header */
+/* header */
 header {
   margin-top: 2vh;
   text-align: center;
   z-index: 1;
 }
-
 h1 {
   font: 600 3.5rem 'Cormorant Garamond', serif;
   margin: 0 0 0.75rem;
 }
-
 nav {
   display: inline-flex;
   gap: 2rem;
   margin-bottom: 1rem;
 }
-
 nav a {
   font: 400 1.25rem 'Cormorant Garamond', serif;
-  color: #222222;
+  color: #222;
   text-decoration: none;
 }
 nav a:hover {
   text-decoration: underline;
 }
 
-/* Static art container */
-#art-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-/* Your static art */
+/* canvas network */
 #art {
-  /* High-def: let it scale down, but never up */
-  max-width: 80vw;
-  max-height: 70vh;
-  width: auto;
-  height: auto;
-
-  /* OR: for pixel-art style, force integer scaling:
-  image-rendering: pixelated;
-  */
-
-  object-fit: contain;
-  user-select: none;
-  pointer-events: none;
+  flex: 1;
+  width: 100%;
+  display: block;
 }
 
-/* Clock */
+/* live clock */
 #clock {
   position: absolute;
   top: 1rem;
   right: 1.5rem;
   font: 1rem 'Cormorant Garamond', serif;
-  color: #222222;
+  color: #222;
   pointer-events: none;
 }
 
-/* Mobile tweaks */
+/* mobile tweaks */
 @media (max-width: 600px) {
   header {
     margin-top: 5vh;
@@ -91,9 +69,5 @@ nav a:hover {
   }
   #clock {
     font-size: 0.9rem;
-  }
-  #art {
-    max-width: 90vw;
-    max-height: 60vh;
   }
 }
