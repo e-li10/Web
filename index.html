@@ -47,222 +47,97 @@
     setInterval(updateClock, 1000);
   </script>
 
-  <!-- Reaction-Diffusion Script with full fallback -->
+  <!-- Reaction-Diffusion Script (CPU 2D fallback) -->
   <script>
   (function(){
     const cvs = document.getElementById('rd');
+    const ctx = cvs.getContext('2d');
 
-    // 1. Get WebGL2 or fall back to WebGL1
-    const gl2 = cvs.getContext('webgl2');
-    const gl  = gl2 || cvs.getContext('webgl');
-    if (!gl) {
-      console.error('WebGL not supported');
-      return;
-    }
-    const isWebGL2 = !!gl2;
+    // We'll simulate on a small grid and scale it up.
+    const SIM_W = 200, SIM_H = 60;
+    const feed = 0.055, kill = 0.062, dt = 1.0;
 
-    // 2. Figure out the best texture type & internal format:
-    //    try full‐float → half‐float → 8-bit
-    let texType, internalFormat;
-    const format = gl.RGBA;
+    let A  = new Float32Array(SIM_W * SIM_H),
+        B  = new Float32Array(SIM_W * SIM_H),
+        A2 = new Float32Array(SIM_W * SIM_H),
+        B2 = new Float32Array(SIM_W * SIM_H);
 
-    // Full-float on WebGL2
-    if (isWebGL2) {
-      const extF = gl.getExtension('EXT_color_buffer_float')
-                 || gl.getExtension('WEBGL_color_buffer_float');
-      if (extF) {
-        texType = gl.FLOAT;
-        internalFormat = gl.RGBA32F;
-      }
-    }
-    // Half-float on WebGL2 (if full-float failed)
-    if (!texType && isWebGL2) {
-      const extHF = gl.getExtension('EXT_color_buffer_half_float');
-      const halfTex = gl.getExtension('OES_texture_half_float');
-      if (extHF && halfTex) {
-        texType = halfTex.HALF_FLOAT_OES;
-        internalFormat = gl.RGBA16F;
-      }
-    }
-    // Full-float on WebGL1
-    if (!texType && !isWebGL2) {
-      const floatTex = gl.getExtension('OES_texture_float');
-      const extF1    = gl.getExtension('EXT_color_buffer_float')
-                      || gl.getExtension('WEBGL_color_buffer_float');
-      if (floatTex && extF1) {
-        texType = gl.FLOAT;
-        internalFormat = gl.RGBA;
-      }
-    }
-    // Half-float on WebGL1
-    if (!texType && !isWebGL2) {
-      const halfTex = gl.getExtension('OES_texture_half_float');
-      const extHF1  = gl.getExtension('EXT_color_buffer_half_float');
-      if (halfTex && extHF1) {
-        texType = halfTex.HALF_FLOAT_OES;
-        internalFormat = gl.RGBA;
-      }
-    }
-    // Final fallback → 8-bit unsigned byte
-    if (!texType) {
-      console.warn('No float extensions—falling back to UNSIGNED_BYTE (lower precision).');
-      texType = gl.UNSIGNED_BYTE;
-      internalFormat = gl.RGBA;
-    }
-
-    // 3. Resize helper
+    // Resize canvas to simulation size, then upscale via CSS
     function resize(){
-      cvs.width  = innerWidth * 0.8 | 0;
-      cvs.height = 240;
-      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      cvs.width  = SIM_W;
+      cvs.height = SIM_H;
+      // CSS (in style.css) does the 80vw×240px sizing
+      ctx.imageSmoothingEnabled = false;
     }
     window.addEventListener('resize', resize);
     resize();
 
-    // 4. Shaders (exactly your originals)
-    const vsSrc = `
-      attribute vec2 a;
-      void main(){ gl_Position = vec4(a,0,1); }
-    `;
-    const fsSrc = `
-      precision highp float;
-      uniform sampler2D prev;
-      uniform vec2 texSize;
-      uniform float feed, kill, dt;
-      vec4 lap(sampler2D s, vec2 uv){
-        vec2 o = 1.0/texSize;
-        return
-          texture2D(s,uv+vec2(-o.x,0.0))+
-          texture2D(s,uv+vec2( o.x,0.0))+
-          texture2D(s,uv+vec2(0.0,-o.y))+
-          texture2D(s,uv+vec2(0.0, o.y))-
-          4.0*texture2D(s,uv);
-      }
-      void main(){
-        vec2 uv = gl_FragCoord.xy/texSize;
-        vec4 c = texture2D(prev,uv);
-        float A = c.r, B = c.g;
-        vec4 L = lap(prev,uv);
-        float dA = 1.0*L.r - A*B*B + feed*(1.0 - A);
-        float dB = 0.5*L.g + A*B*B - (kill+feed)*B;
-        A += dA*dt;
-        B += dB*dt;
-        gl_FragColor = vec4(A,B,0,1);
-      }
-    `;
-    function compile(src, type){
-      const s = gl.createShader(type);
-      gl.shaderSource(s, src);
-      gl.compileShader(s);
-      return s;
+    // Initialize fields
+    for (let i = 0; i < SIM_W*SIM_H; i++) {
+      A[i] = 1.0;
+      B[i] = 0.0;
     }
-    const prog = gl.createProgram();
-    gl.attachShader(prog, compile(vsSrc, gl.VERTEX_SHADER));
-    gl.attachShader(prog, compile(fsSrc, gl.FRAGMENT_SHADER));
-    gl.linkProgram(prog);
-    gl.useProgram(prog);
-
-    // 5. Uniform setup
-    gl.uniform1i(gl.getUniformLocation(prog, 'prev'), 0);
-    gl.uniform2f(gl.getUniformLocation(prog, 'texSize'),
-                 cvs.width, cvs.height);
-    gl.uniform1f(gl.getUniformLocation(prog, 'feed'), 0.055);
-    gl.uniform1f(gl.getUniformLocation(prog, 'kill'), 0.062);
-    gl.uniform1f(gl.getUniformLocation(prog, 'dt'), 1.0);
-
-    // 6. Full-screen quad (unchanged)
-    const quad = new Float32Array([-1,-1, 1,-1, -1,1,  -1,1, 1,-1, 1,1]);
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
-    const aLoc = gl.getAttribLocation(prog, 'a');
-    gl.enableVertexAttribArray(aLoc);
-    gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
-
-    // 7. Create ping-pong textures & FBOs
-    function makeTex(){
-      const t = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texImage2D(
-        gl.TEXTURE_2D, 0,
-        // under WebGL2 internalFormat can be RGBA32F, RGBA16F; under WebGL1 always RGBA
-        internalFormat,
-        cvs.width, cvs.height, 0,
-        format,
-        texType,
-        null
-      );
-      return t;
-    }
-    const texA = makeTex(), texB = makeTex();
-    const fboA = gl.createFramebuffer(), fboB = gl.createFramebuffer();
-
-    // 8. Seed texA with A=1 everywhere, B=1 in a small square
-    const N = cvs.width * cvs.height * 4;
-    let seed;
-    if (texType === gl.FLOAT || texType === gl.HALF_FLOAT_OES) {
-      seed = new Float32Array(N);
-      for (let y=0; y<cvs.height; y++){
-        for (let x=0; x<cvs.width; x++){
-          const i = (y*cvs.width + x)*4;
-          seed[i]   = 1.0;
-          seed[i+1] = (x>cvs.width/2-10 && x<cvs.width/2+10 &&
-                       y>cvs.height/2-10&& y<cvs.height/2+10) ? 1.0 : 0.0;
-          seed[i+2] = 0.0;
-          seed[i+3] = 1.0;
-        }
-      }
-    } else {
-      seed = new Uint8Array(N);
-      for (let y=0; y<cvs.height; y++){
-        for (let x=0; x<cvs.width; x++){
-          const i = (y*cvs.width + x)*4;
-          seed[i]   = 255;  // A=1.0
-          seed[i+1] = (x>cvs.width/2-10 && x<cvs.width/2+10 &&
-                       y>cvs.height/2-10&& y<cvs.height/2+10)
-                    ? 255 : 0; // B
-          seed[i+2] = 0;
-          seed[i+3] = 255;
-        }
+    // Seed a small square in the center
+    for (let y = SIM_H/2 - 10; y < SIM_H/2 + 10; y++) {
+      for (let x = SIM_W/2 - 10; x < SIM_W/2 + 10; x++) {
+        B[y*SIM_W + x] = 1.0;
       }
     }
-    gl.bindTexture(gl.TEXTURE_2D, texA);
-    gl.texImage2D(
-      gl.TEXTURE_2D, 0, internalFormat,
-      cvs.width, cvs.height, 0,
-      format, texType,
-      seed
-    );
 
-    // 9. Ping-pong render loop
-    let pingTex = texA, pongTex = texB;
-    let pingFBO = fboA, pongFBO = fboB;
+    // Helper: compute Laplacian at index i
+    function lap(i) {
+      const x = i % SIM_W, y = (i / SIM_W)|0;
+      let sumA = 0, sumB = 0;
+      // 4-neighbor laplacian
+      const offsets = [1, -1, SIM_W, -SIM_W];
+      for (let off of offsets) {
+        const j = i + off;
+        // skip edges
+        if (j < 0 || j >= SIM_W*SIM_H) continue;
+        sumA += A[j];
+        sumB += B[j];
+      }
+      return [sumA - 4*A[i], sumB - 4*B[i]];
+    }
 
-    function step(){
-      // write into pongTex
-      gl.bindFramebuffer(gl.FRAMEBUFFER, pongFBO);
-      gl.framebufferTexture2D(
-        gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-        gl.TEXTURE_2D, pongTex, 0
-      );
-      gl.bindTexture(gl.TEXTURE_2D, pingTex);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    // Prepare an ImageData for drawing
+    const img = ctx.createImageData(SIM_W, SIM_H);
 
-      // display pongTex
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      gl.bindTexture(gl.TEXTURE_2D, pongTex);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    // Main loop
+    function step() {
+      // 1) compute next state into A2, B2
+      for (let i = 0; i < SIM_W*SIM_H; i++) {
+        const [la, lb] = lap(i);
+        const a = A[i], b = B[i];
+        const dA = la - a*b*b + feed*(1 - a);
+        const dB = lb + a*b*b - (kill + feed)*b;
+        A2[i] = a + dA*dt;
+        B2[i] = b + dB*dt;
+      }
+      // 2) swap buffers
+      [A, A2] = [A2, A];
+      [B, B2] = [B2, B];
 
-      // swap
-      [pingTex, pongTex] = [pongTex, pingTex];
-      [pingFBO, pongFBO] = [pongFBO, pingFBO];
+      // 3) write pixels into ImageData
+      for (let i = 0; i < SIM_W*SIM_H; i++) {
+        // map (A-B) to [0,255]
+        let v = Math.floor(((A[i] - B[i]) + 1) * 0.5 * 255);
+        if (v < 0) v = 0;
+        if (v > 255) v = 255;
+        const idx = i * 4;
+        img.data[idx]   = v;
+        img.data[idx+1] = v;
+        img.data[idx+2] = v;
+        img.data[idx+3] = 255;
+      }
+
+      // 4) draw to screen (this scales up automatically)
+      ctx.putImageData(img, 0, 0);
 
       requestAnimationFrame(step);
     }
-    step();
 
+    step();
   })();
   </script>
 </body>
