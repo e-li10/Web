@@ -96,10 +96,18 @@ function draw(){
     const y = 15 - ((v - lo)/(hi - lo)) * 15;
     i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
   });
-  const diff = tape.at(-1) - tape.at(-2) || 0;
-  ctx.strokeStyle = diff > 0 ? '#0a0' : diff < 0 ? '#c00' : '#555';
-  ctx.lineWidth   = 1;
+
+  /* choose the right delta for colour */
+  const change = seeded
+    ? tape.at(-1) - tape[0]          // placeholder phase: whole slope
+    : tape.at(-1) - tape.at(-2);     // live phase: last tick
+
+  ctx.strokeStyle = change > 0 ? '#0a0'
+                   : change < 0 ? '#c00'
+                   : '#555';
+  ctx.lineWidth = 1;
   ctx.stroke();
+
   icon.href = cvs.toDataURL('image/png');
 }
 
