@@ -1,190 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Ξ —</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <title>Ξ —</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<!-- Cormorant Garamond -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+  <!-- Cormorant Garamond -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
-<!-- Preload Lozowick print -->
-<link rel="preload" as="image"
-      href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
+  <!-- Preload Lozowick print -->
+  <link rel="preload" as="image"
+        href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-:root{
-  --ink:#444;
-  --stack:680px;
-  --top:45px;
-}
+    :root {
+      --ink: #000;
+      --stack: 680px;
+      --top: 35px;
+    }
 
-body{
-  font-family:'Cormorant Garamond',serif;
-  color:var(--ink);
-  text-align:center;
-  line-height:1.45;
-  opacity:0;
-  animation:fade .4s ease forwards;
-}
+    body {
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--ink);
+      text-align: center;
+      line-height: 1.45;
+      opacity: 0;
+      animation: fade .4s ease forwards;
+    }
 
-main{width:var(--stack);margin:var(--top) auto 0}
+    main {
+      width: var(--stack);
+      margin: var(--top) auto 0;
+    }
 
-/* hero → name gap: tighten aggressively */
-#hero{
-  width:131px;height:auto;object-fit:cover;
-  display:block;
-  margin:0 auto 10px;      /* was 25px */
-}
+    /* hero → name gap: 5px */
+    #hero {
+      width: 131px;
+      height: auto;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 5px;
+    }
 
-/* nav → hairline gap: open it up */
-#links{
-  display:flex;justify-content:center;gap:80px;
-  font-size:22px;font-weight:400;letter-spacing:.04em;
-  margin-bottom:140px;     /* was 90px */
-}
-      
-/* divider */
-.divider{width:70%;margin:0 auto;border:none;border-top:1px solid var(--ink)}
+    /* nav styling */
+    #links {
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      font-size: 18px;
+      font-weight: 400;
+      margin-bottom: 35px;
+    }
+    #links a {
+      color: var(--ink);
+      text-decoration: none;
+    }
 
-/* clock */
-#clock{position:fixed;top:15px;right:28px;font:400 18px 'Cormorant Garamond',serif;color:var(--ink)}
+    /* divider */
+    .divider {
+      width: 70%;
+      margin: 0 auto;
+      border: none;
+      border-top: 1px solid var(--ink);
+    }
 
-@keyframes fade{to{opacity:1}}
-</style>
+    /* clock */
+    #clock {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      font: 400 16px 'Cormorant Garamond', serif;
+      color: var(--ink);
+    }
+
+    @keyframes fade { to { opacity: 1 } }
+  </style>
 </head>
 
 <body>
-<!-- live Eastern-time clock -->
-<time id="clock" aria-label="Current time" datetime=""></time>
+  <!-- live Eastern-time clock -->
+  <time id="clock" aria-label="Current time" datetime=""></time>
 
-<main>
-  <img id="hero"
-       src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
-       width="131" height="131"
-       alt="Louis Lozowick, New York (1923)">
+  <main>
+    <img id="hero"
+         src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
+         width="131" height="131"
+         alt="Louis Lozowick, New York (1923)">
 
-  <h1><a href="https://www.linkedin.com/in/eric-li-226850249/" target="_blank" rel="noopener">Eric Li</a></h1>
+    <h1>
+      <a href="https://www.linkedin.com/in/eric-li-226850249/"
+         target="_blank" rel="noopener">
+        Eric Li
+      </a>
+    </h1>
 
-  <div id="links">
-    <a href="thoughts.html">Thoughts</a>
-    <a href="mailto:eric_li1@college.harvard.edu">Contact</a>
-  </div>
+    <div id="links">
+      <a href="thoughts.html">Thoughts</a>
+      <a href="mailto:eric_li1@college.harvard.edu">Contact</a>
+    </div>
 
-  <hr class="divider">
-</main>
+    <hr class="divider">
+  </main>
 
-<!-- clock script -->
-<script>
-const clk=document.getElementById('clock');
-function tick(){
-  const now=new Date();
-  clk.textContent=new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/New_York',
-    hour12:false,
-    hour:'2-digit',minute:'2-digit',second:'2-digit'
-  }).format(now);
-  clk.dateTime=now.toISOString();
-}
-tick();
-setInterval(tick,1000);
-</script>
-
-<!-- favicon sparkline: instant placeholder, real price in title from the start -->
-<script>
-/* ---------- DOM plumbing ---------- */
-const icon = document.createElement('link');
-icon.rel   = 'icon';
-icon.type  = 'image/png';
-icon.sizes = '16x16';
-document.head.appendChild(icon);
-
-const cvs = document.createElement('canvas');
-cvs.width = cvs.height = 16;
-const ctx = cvs.getContext('2d');
-
-/* ---------- config & state ---------- */
-const LEN = 20;                      // points in the sparkline
-let tape = [];                       // price series
-let seeded = true;                   // placeholder flag
-
-/* ---------- helpers ---------- */
-async function fetchPrice(){
-  const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
-  return +((await r.json()).data.amount);
-}
-function randomWalk(base){
-  const arr = [];
-  const vol = base * 0.005;          // ±0.5 %
-  let v = base;
-  for(let i = 0; i < LEN; i++){
-    v += (Math.random()*2 - 1) * vol;
-    arr.push(v);
-  }
-  return arr;
-}
-function draw(){
-  const hi = Math.max(...tape), lo = Math.min(...tape) || 1;
-  ctx.clearRect(0,0,16,16);
-  ctx.beginPath();
-  tape.forEach((v,i)=>{
-    const x = i * 16 / (LEN - 1);
-    const y = 15 - ((v - lo)/(hi - lo)) * 15;
-    i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
-  });
-
-  /* choose the right delta for colour */
-  const change = seeded
-    ? tape.at(-1) - tape[0]          // placeholder phase: whole slope
-    : tape.at(-1) - tape.at(-2);     // live phase: last tick
-
-  ctx.strokeStyle = change > 0 ? '#0a0'
-                   : change < 0 ? '#c00'
-                   : '#555';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  icon.href = cvs.toDataURL('image/png');
-}
-
-/* ---------- initialise ---------- */
-(async ()=>{
-  /* try to get a real price right away */
-  let price;
-  try{ price = await fetchPrice(); } catch{ /* network hiccup */ }
-
-  /* title uses the real price if we have it, placeholder “Ξ —” otherwise */
-  document.title = price
-    ? `Ξ ${Math.round(price).toLocaleString('en-US')} USD`
-    : 'Ξ —';
-
-  /* seed the tape with a random-walk around whatever we have */
-  const base = price || (3000 + Math.random()*500);
-  tape = randomWalk(base);
-  draw();                              // placeholder icon now visible
-
-  /* ---------- 30-second cadence ---------- */
-  setInterval(async ()=>{
-    try{
-      const p = await fetchPrice();
-      document.title = `Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
-
-      if(seeded){                      // first successful tick → go live
-        tape = Array(LEN).fill(p);     // wipe placeholder
-        seeded = false;
-      }else{
-        tape.push(p); tape.shift();
-      }
-      draw();
-    }catch{
-      console.warn('price fetch failed');
+  <!-- clock script -->
+  <script>
+    const clk = document.getElementById('clock');
+    function tick(){
+      const now = new Date();
+      clk.textContent = new Intl.DateTimeFormat('en-US',{
+        timeZone: 'America/New_York',
+        hour12: false,
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      }).format(now);
+      clk.dateTime = now.toISOString();
     }
-  }, 30_000);
-})();
-</script>
+    tick();
+    setInterval(tick,1000);
+  </script>
+
+  <!-- favicon sparkline: instant placeholder, real price in title from the start -->
+  <script>
+    /* ---------- DOM plumbing ---------- */
+    const icon = document.createElement('link');
+    icon.rel   = 'icon';
+    icon.type  = 'image/png';
+    icon.sizes = '16x16';
+    document.head.appendChild(icon);
+
+    const cvs = document.createElement('canvas');
+    cvs.width = cvs.height = 16;
+    const ctx = cvs.getContext('2d');
+
+    /* ---------- config & state ---------- */
+    const LEN = 20;                      // points in the sparkline
+    let tape = [];                       // price series
+    let seeded = true;                   // placeholder flag
+
+    /* ---------- helpers ---------- */
+    async function fetchPrice(){
+      const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
+      return +((await r.json()).data.amount);
+    }
+    function randomWalk(base){
+      const arr = [];
+      const vol = base * 0.005;          // ±0.5%
+      let v = base;
+      for(let i = 0; i < LEN; i++){
+        v += (Math.random()*2 - 1) * vol;
+        arr.push(v);
+      }
+      return arr;
+    }
+    function draw(){
+      const hi = Math.max(...tape), lo = Math.min(...tape) || 1;
+      ctx.clearRect(0,0,16,16);
+      ctx.beginPath();
+      tape.forEach((v,i)=>{
+        const x = i * 16 / (LEN - 1);
+        const y = 15 - ((v - lo)/(hi - lo)) * 15;
+        i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+      });
+
+      /* choose the right delta for colour */
+      const change = seeded
+        ? tape.at(-1) - tape[0]          // placeholder phase
+        : tape.at(-1) - tape.at(-2);     // live phase
+
+      ctx.strokeStyle = change > 0 ? '#0a0'
+                       : change < 0 ? '#c00'
+                       : '#555';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      icon.href = cvs.toDataURL('image/png');
+    }
+
+    /* ---------- initialise ---------- */
+    (async ()=>{
+      let price;
+      try{ price = await fetchPrice(); } catch{}
+
+      document.title = price
+        ? `Ξ ${Math.round(price).toLocaleString('en-US')} USD`
+        : 'Ξ —';
+
+      const base = price || (3000 + Math.random()*500);
+      tape = randomWalk(base);
+      draw();
+
+      setInterval(async ()=>{
+        try{
+          const p = await fetchPrice();
+          document.title = `Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
+
+          if(seeded){
+            tape = Array(LEN).fill(p);
+            seeded = false;
+          } else {
+            tape.push(p); tape.shift();
+          }
+          draw();
+        } catch { console.warn('price fetch failed'); }
+      }, 30000);
+    })();
+  </script>
 </body>
 </html>
