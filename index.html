@@ -10,10 +10,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
-  <!-- Preload Lozowick print -->
-  <link rel="preload" as="image"
-        href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
-
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -37,16 +33,26 @@
       margin: var(--top) auto 0;
     }
 
-    /* hero → name gap: 5px */
+    /* Hero image: 129px to match Othman exactly */
     #hero {
-      width: 131px;
+      width: 129px;
       height: auto;
       object-fit: cover;
       display: block;
       margin: 0 auto 5px;
     }
 
-    /* nav styling */
+    /* Heading */
+    h1 {
+      font-weight: 400;
+    }
+    h1 a {
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: inherit;
+    }
+
+    /* Nav links */
     #links {
       display: flex;
       justify-content: center;
@@ -60,7 +66,7 @@
       text-decoration: none;
     }
 
-    /* divider */
+    /* Divider */
     .divider {
       width: 70%;
       margin: 0 auto;
@@ -68,7 +74,7 @@
       border-top: 1px solid var(--ink);
     }
 
-    /* clock */
+    /* Clock */
     #clock {
       position: fixed;
       top: 12px;
@@ -80,16 +86,16 @@
     @keyframes fade { to { opacity: 1 } }
   </style>
 </head>
-
 <body>
   <!-- live Eastern-time clock -->
   <time id="clock" aria-label="Current time" datetime=""></time>
 
   <main>
-    <img id="hero"
-         src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
-         width="131" height="131"
-         alt="Louis Lozowick, New York (1923)">
+    <img
+      id="hero"
+      src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
+      alt="Louis Lozowick, New York (1923)"
+    >
 
     <h1>
       <a href="https://www.linkedin.com/in/eric-li-226850249/"
@@ -106,12 +112,12 @@
     <hr class="divider">
   </main>
 
-  <!-- clock script -->
+  <!-- clock update script -->
   <script>
     const clk = document.getElementById('clock');
-    function tick(){
+    function tick() {
       const now = new Date();
-      clk.textContent = new Intl.DateTimeFormat('en-US',{
+      clk.textContent = new Intl.DateTimeFormat('en-US', {
         timeZone: 'America/New_York',
         hour12: false,
         hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -119,12 +125,11 @@
       clk.dateTime = now.toISOString();
     }
     tick();
-    setInterval(tick,1000);
+    setInterval(tick, 1000);
   </script>
 
-  <!-- favicon sparkline: instant placeholder, real price in title from the start -->
+  <!-- favicon sparkline script -->
   <script>
-    /* ---------- DOM plumbing ---------- */
     const icon = document.createElement('link');
     icon.rel   = 'icon';
     icon.type  = 'image/png';
@@ -135,40 +140,39 @@
     cvs.width = cvs.height = 16;
     const ctx = cvs.getContext('2d');
 
-    /* ---------- config & state ---------- */
-    const LEN = 20;                      // points in the sparkline
-    let tape = [];                       // price series
-    let seeded = true;                   // placeholder flag
+    const LEN = 20;
+    let tape = [];
+    let seeded = true;
 
-    /* ---------- helpers ---------- */
-    async function fetchPrice(){
+    async function fetchPrice() {
       const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
       return +((await r.json()).data.amount);
     }
-    function randomWalk(base){
+
+    function randomWalk(base) {
       const arr = [];
-      const vol = base * 0.005;          // ±0.5%
+      const vol = base * 0.005;
       let v = base;
-      for(let i = 0; i < LEN; i++){
-        v += (Math.random()*2 - 1) * vol;
+      for (let i = 0; i < LEN; i++) {
+        v += (Math.random() * 2 - 1) * vol;
         arr.push(v);
       }
       return arr;
     }
-    function draw(){
+
+    function draw() {
       const hi = Math.max(...tape), lo = Math.min(...tape) || 1;
-      ctx.clearRect(0,0,16,16);
+      ctx.clearRect(0, 0, 16, 16);
       ctx.beginPath();
-      tape.forEach((v,i)=>{
+      tape.forEach((v, i) => {
         const x = i * 16 / (LEN - 1);
-        const y = 15 - ((v - lo)/(hi - lo)) * 15;
-        i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+        const y = 15 - ((v - lo) / (hi - lo)) * 15;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
       });
 
-      /* choose the right delta for colour */
       const change = seeded
-        ? tape.at(-1) - tape[0]          // placeholder phase
-        : tape.at(-1) - tape.at(-2);     // live phase
+        ? tape.at(-1) - tape[0]
+        : tape.at(-1) - tape.at(-2);
 
       ctx.strokeStyle = change > 0 ? '#0a0'
                        : change < 0 ? '#c00'
@@ -179,32 +183,33 @@
       icon.href = cvs.toDataURL('image/png');
     }
 
-    /* ---------- initialise ---------- */
-    (async ()=>{
+    (async () => {
       let price;
-      try{ price = await fetchPrice(); } catch{}
-
+      try { price = await fetchPrice(); } catch {}
       document.title = price
         ? `Ξ ${Math.round(price).toLocaleString('en-US')} USD`
         : 'Ξ —';
 
-      const base = price || (3000 + Math.random()*500);
+      const base = price || (3000 + Math.random() * 500);
       tape = randomWalk(base);
       draw();
 
-      setInterval(async ()=>{
-        try{
+      setInterval(async () => {
+        try {
           const p = await fetchPrice();
           document.title = `Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
 
-          if(seeded){
+          if (seeded) {
             tape = Array(LEN).fill(p);
             seeded = false;
           } else {
-            tape.push(p); tape.shift();
+            tape.push(p);
+            tape.shift();
           }
           draw();
-        } catch { console.warn('price fetch failed'); }
+        } catch {
+          console.warn('price fetch failed');
+        }
       }, 30000);
     })();
   </script>
