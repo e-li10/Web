@@ -96,90 +96,84 @@ tick();
 setInterval(tick,1000);
 </script>
 
-<!-- favicon sparkline with instant placeholder -->
+<!-- favicon sparkline (instant random → real after 30 s) -->
 <script>
-/* ---------- setup ---------- */
-const icon=document.createElement('link');
-icon.rel='icon';
-icon.type='image/png';
-icon.sizes='16x16';
+/* ---------- DOM setup ---------- */
+const icon = document.createElement('link');
+icon.rel   = 'icon';
+icon.type  = 'image/png';
+icon.sizes = '16x16';
 document.head.appendChild(icon);
 
-const cvs=document.createElement('canvas');
-cvs.width=cvs.height=16;
-const ctx=cvs.getContext('2d');
+const cvs  = document.createElement('canvas');
+cvs.width  = cvs.height = 16;
+const ctx  = cvs.getContext('2d');
 
-/* ---------- state ---------- */
-const LEN=20;              // points shown
-let tape=[];               // price series
-let seeded=false;          // true = placeholder
+/* ---------- config & state ---------- */
+const LEN = 20;                     // points in the sparkline
+let tape = [];                      // rolling price series
+let liveMode = false;               // false = placeholder, true = on-chain
+const BASE = 3000 + Math.random()*500; // arbitrary centre for fake walk
 
 /* ---------- helpers ---------- */
+function randomWalk(base){
+  const out = [];
+  const vol = base * 0.005;         // ±0.5 %
+  let v = base;
+  for(let i = 0; i < LEN; i++){
+    v += (Math.random()*2 - 1) * vol;
+    out.push(v);
+  }
+  return out;
+}
+
 async function fetchPrice(){
-  const r=await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
+  const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
   return +((await r.json()).data.amount);
 }
 
-function randomWalk(base){
-  const arr=[]; const vol=base*0.005; let v=base;
-  for(let i=0;i<LEN;i++){ v+=(Math.random()*2-1)*vol; arr.push(v); }
-  return arr;
-}
-
 function draw(){
-  const hi=Math.max(...tape), lo=Math.min(...tape)||1;
+  const hi = Math.max(...tape), lo = Math.min(...tape) || 1;
   ctx.clearRect(0,0,16,16);
   ctx.beginPath();
   tape.forEach((v,i)=>{
-    const x=i*16/(LEN-1);
-    const y=15-((v-lo)/(hi-lo))*15;
-    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    const x = i * 16 / (LEN - 1);
+    const y = 15 - ((v - lo)/(hi - lo)) * 15;
+    i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
   });
-  const diff=tape.at(-1)-tape.at(-2)||0;
-  ctx.strokeStyle=diff>0?'#0a0':diff<0?'#c00':'#555';
-  ctx.lineWidth=1;
+  const diff = tape.at(-1) - tape.at(-2) || 0;
+  ctx.strokeStyle = diff > 0 ? '#0a0' : diff < 0 ? '#c00' : '#555';
+  ctx.lineWidth = 1;
   ctx.stroke();
-  icon.href=cvs.toDataURL('image/png');
+  icon.href = cvs.toDataURL('image/png');
 }
 
-/* ---------- updater ---------- */
-async function update(){
-  try{
-    const price=await fetchPrice();
+/* ---------- initialise with random graph ---------- */
+tape = randomWalk(BASE);
+draw();
 
-    if(seeded||!tape.length){
-      tape=Array(LEN).fill(price);   // wipe placeholder or empty start
-      seeded=false;
-    }else{
-      tape.push(price); tape.shift();
-    }
+/* ---------- upgrade to real data after 30 s ---------- */
+setTimeout(async () => {
+  liveMode = true;                  // flip the flag
 
-    draw();
-    document.title=`Ξ ${Math.round(price).toLocaleString('en-US')} USD`;
-    return true;
-  }catch{
-    if(!tape.length){               // first call failed → placeholder
-      tape=randomWalk(3000);
-      seeded=true;
+  // first real fetch replaces the tape entirely
+  const price = await fetchPrice().catch(()=>null);
+  tape = price ? Array(LEN).fill(price) : randomWalk(BASE);
+  draw();
+  if(price){
+    document.title = `Ξ ${Math.round(price).toLocaleString('en-US')} USD`;
+  }
+
+  /* start normal 30-second cadence */
+  setInterval(async () => {
+    try{
+      const p = await fetchPrice();
+      tape.push(p); tape.shift();
       draw();
+      document.title = `Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
+    }catch{
+      console.warn('price fetch failed');
     }
-    console.warn('price fetch failed');
-    return false;
-  }
-}
-
-/* ---------- poll logic ---------- */
-(async()=>{
-  let ok=await update();
-  if(!ok){
-    const fast=setInterval(async()=>{
-      ok=await update();
-      if(ok){ clearInterval(fast); setInterval(update,30_000); }
-    },5000);                         // retry every 5 s until success
-  }else{
-    setInterval(update,30_000);      // 30-second cadence
-  }
-})();
+  }, 30_000);
+}, 30_000);
 </script>
-</body>
-</html>
