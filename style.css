@@ -1,31 +1,31 @@
 /* reset */
 *{margin:0;padding:0;box-sizing:border-box}
 
-/* palette + baseline */
+/* palette + rhythm */
 :root{
-  --space:28px;              /* baseline rhythm */
-  --dark:#2c2d2e;            /* text colour from reference */
-  --muted:#495057;           /* nav colour */
-  --line:#2c2d2e;            /* divider colour */
-  --clock:#60686f;           /* subtle clock tint */
+  --space:32px;               /* vertical rhythm */
+  --text:#2c2d2e;             /* almost-black charcoal */
+  --nav:#2c2d2e;              /* same tint for nav */
+  --line:#2c2d2e;             /* divider colour */
+  --clock:#60686f;            /* subtle clock tint */
 }
 
 /* page */
 body{
   font-family:'Cormorant Garamond',serif;
-  color:var(--dark);
+  color:var(--text);
   text-align:center;
   line-height:1.45;
   padding-top:var(--space);
 }
 
 /* centred column */
-.container{
-  max-width:680px;
+.column{
+  max-width:680px;            /* matches reference width */
   margin:0 auto;
 }
 
-/* hero */
+/* hero square */
 #hero{
   width:200px;
   height:200px;
@@ -36,24 +36,24 @@ body{
 
 /* name */
 h1{
-  font-size:56px;            /* slight boldness */
-  font-weight:500;
+  font-size:56px;             /* exact size from reference */
+  font-weight:500;            /* slight boldness */
   letter-spacing:.01em;
   margin-bottom:var(--space);
 }
 
-/* nav */
+/* navigation */
 nav{
   display:flex;
   justify-content:center;
-  gap:96px;                  /* symmetrical under the name */
+  gap:96px;                   /* makes Home/Thoughts perfectly centred */
   margin-bottom:var(--space);
 }
 
 nav a{
   font-size:22px;
   font-weight:400;
-  color:var(--muted);
+  color:var(--nav);
   text-decoration:none;
   letter-spacing:.04em;
   transition:opacity .25s;
@@ -68,11 +68,11 @@ nav a:hover{opacity:.6}
   border-top:1px solid var(--line);
 }
 
-/* clock (slightly larger than Othman’s) */
+/* clock (2 px larger than original) */
 #clock{
   position:fixed;
   top:12px;
   right:24px;
-  font-size:14px;
+  font-size:16px;              
   color:var(--clock);
 }
