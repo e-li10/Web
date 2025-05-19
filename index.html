@@ -22,11 +22,19 @@
     </nav>
   </header>
 
-  <canvas id="art"></canvas>
-  <div id="clock"></div>
+  <!-- Static Art Section -->
+  <div id="art-container">
+    <!-- Point src to your ultra-high-def or pixel-art file -->
+    <img
+      id="art"
+      src="static-art.png"
+      alt="Crypto × AI network"
+    />
+  </div>
 
+  <div id="clock"></div>
   <script>
-    // Clock
+    // Live Eastern-Time clock
     function updateClock() {
       document.getElementById('clock').textContent = new Intl.DateTimeFormat('en-US', {
         timeZone: 'America/New_York',
@@ -38,93 +46,6 @@
     }
     updateClock();
     setInterval(updateClock, 1000);
-  </script>
-
-  <script type="module">
-    // Import Three.js and OrbitControls as modules
-    import * as THREE from 'https://unpkg.com/three@0.150.0/build/three.module.js';
-    import { OrbitControls } from 'https://unpkg.com/three@0.150.0/examples/jsm/controls/OrbitControls.js';
-
-    // Renderer
-    const canvas   = document.getElementById('art');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor(0xffffff, 1);
-
-    // Scene + camera
-    const scene  = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
-    camera.position.set(0, 1, 4);
-
-    // Lights
-    scene.add(new THREE.AmbientLight(0x888888));
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(5, 10, 7);
-    scene.add(dir);
-
-    // Controls
-    const controls = new OrbitControls(camera, canvas);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.07;
-
-    // Materials
-    const blockMat = new THREE.MeshStandardMaterial({ color: 0x00ccff, metalness: 0.3, roughness: 0.5 });
-    const linkMat  = new THREE.MeshStandardMaterial({ color: 0xff8800, metalness: 0.3, roughness: 0.5 });
-
-    // Build the voxel chain
-    const GROUP   = new THREE.Group();
-    scene.add(GROUP);
-
-    const CLUSTERS = 3, SIZE = 3, VOXEL = 0.3, STEP = 0.35;
-    const LINKS    = [-1, 1]; // link positions
-
-    // Clusters
-    for (let c = 0; c < CLUSTERS; c++) {
-      const ox = (c - 1) * STEP * SIZE;
-      for (let x = 0; x < SIZE; x++) {
-        for (let y = 0; y < SIZE; y++) {
-          for (let z = 0; z < SIZE; z++) {
-            const cube = new THREE.Mesh(
-              new THREE.BoxGeometry(VOXEL, VOXEL, VOXEL),
-              blockMat
-            );
-            cube.position.set(ox + (x - 1) * STEP, (y - 1) * STEP, (z - 1) * STEP);
-            GROUP.add(cube);
-          }
-        }
-      }
-    }
-
-    // Links
-    LINKS.forEach(p => {
-      const link = new THREE.Mesh(
-        new THREE.BoxGeometry(VOXEL * 0.6, VOXEL * 0.6, VOXEL * 0.6),
-        linkMat
-      );
-      link.position.set(p * (STEP * (SIZE / 2)), 0, 0);
-      GROUP.add(link);
-    });
-
-    // Resize & render loop
-    window.addEventListener('resize', resize);
-    resize();
-
-    const clock = new THREE.Clock();
-    (function animate() {
-      controls.update();
-      const t = clock.getElapsedTime();
-      GROUP.rotation.x = Math.sin(t * 0.2) * 0.1;
-      GROUP.rotation.y += 0.0015;
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    })();
-
-    function resize() {
-      const w = canvas.clientWidth, h = canvas.clientHeight;
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-    }
   </script>
 </body>
 </html>
