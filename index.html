@@ -42,30 +42,30 @@
       margin: 0 auto 5px;
     }
 
-/* Heading: bump up a touch */
-h1 {
-  font-weight: 400;
-  font-size: 32px;    /* ↑ Eric Li slightly larger */
-  margin-bottom: 8px; /* small gap down to nav */
-}
+    /* Heading: bump up a touch */
+    h1 {
+      font-weight: 400;
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
 
-/* Nav links: pull down toward divider */
-#links {
-  display: flex;
-  justify-content: center;
-  gap: 2em;
-  font-size: 16px;    /* match subhead size */
-  font-weight: 400;
-  margin-bottom: 15px;/* ↓ bring Thoughts/Contact closer to the line */
-}
+    /* Nav links: pull down toward divider */
+    #links {
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      font-size: 16px;
+      font-weight: 400;
+      margin-bottom: 15px;
+    }
 
-/* Divider: if it still feels too close, add a little top-margin */
-.divider {
-  width: 70%;
-  margin: 6px auto 0; /* ↑ pushes line down by 6px */
-  border: none;
-  border-top: 1px solid var(--ink);
-}
+    /* Divider: if it still feels too close, add a little top-margin */
+    .divider {
+      width: 70%;
+      margin: 6px auto 0;
+      border: none;
+      border-top: 1px solid var(--ink);
+    }
 
     /* Clock */
     #clock {
@@ -77,6 +77,13 @@ h1 {
     }
 
     @keyframes fade { to { opacity: 1 } }
+
+    /* force links to black, no underline */
+    h1 a,
+    #links a {
+      color: var(--ink) !important;
+      text-decoration: none !important;
+    }
   </style>
 </head>
 <body>
