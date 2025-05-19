@@ -26,9 +26,10 @@
   </header>
 
   <canvas id="art"></canvas>
-
   <div id="clock"></div>
+
   <script>
+    // live clock
     function updateClock() {
       document.getElementById('clock').textContent =
         new Intl.DateTimeFormat('en-US', {
@@ -43,90 +44,92 @@
     setInterval(updateClock, 1000);
   </script>
 
-  <!-- Three.js token-mesh network -->
+  <!-- Three.js voxel chain -->
   <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.150.0/build/three.module.js';
     import { OrbitControls } from 'https://unpkg.com/three@0.150.0/examples/jsm/controls/OrbitControls.js';
 
+    // renderer + scene + camera
     const canvas = document.getElementById('art');
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
-
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111111);
     const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
-    camera.position.set(0, 0, 3);
+    camera.position.set(0, 1.5, 5);
 
+    // lights
+    scene.add(new THREE.AmbientLight(0x444444));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(5, 10, 7);
+    scene.add(dir);
+
+    // controls
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
-    // generate spherical nodes
-    const NODE_COUNT = 200;
-    const pos = new Float32Array(NODE_COUNT * 3);
-    for (let i = 0; i < NODE_COUNT; i++) {
-      const θ = Math.acos(2 * Math.random() - 1);
-      const φ = 2 * Math.PI * Math.random();
-      const i3 = i * 3;
-      pos[i3]   = Math.sin(θ) * Math.cos(φ);
-      pos[i3+1] = Math.sin(θ) * Math.sin(φ);
-      pos[i3+2] = Math.cos(θ);
-    }
-    const nodesGeo = new THREE.BufferGeometry();
-    nodesGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const nodesMat = new THREE.PointsMaterial({
-      size: 0.04,
-      transparent: true,
-      opacity: 0.8,
-      depthWrite: false
-    });
-    const nodes = new THREE.Points(nodesGeo, nodesMat);
-    scene.add(nodes);
+    // materials
+    const blockMat = new THREE.MeshStandardMaterial({ color: 0x00ffcc, metalness: 0.2, roughness: 0.6 });
+    const linkMat  = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.2, roughness: 0.6 });
 
-    // random edges
-    const edges = [];
-    for (let i = 0; i < NODE_COUNT; i++) {
-      for (let j = i + 1; j < NODE_COUNT; j++) {
-        if (Math.random() < 0.02) edges.push(i, j);
+    // parameters
+    const CLUSTER_COUNT = 3;
+    const CLUSTER_SIZE = 3;            // 3×3×3 voxels
+    const VOXEL_SIZE   = 0.3;
+    const SPACING      = 0.35;         // center-to-center
+    const LINK_CUBES   = [ -0.75, 0.75 ];
+
+    // group everything
+    const chainGroup = new THREE.Group();
+    scene.add(chainGroup);
+
+    // build clusters
+    for (let c = 0; c < CLUSTER_COUNT; c++) {
+      const cx = (c - 1) * SPACING * CLUSTER_SIZE; // e.g. -1.05, 0, +1.05
+      for (let i = 0; i < CLUSTER_SIZE; i++) {
+        for (let j = 0; j < CLUSTER_SIZE; j++) {
+          for (let k = 0; k < CLUSTER_SIZE; k++) {
+            const mesh = new THREE.Mesh(
+              new THREE.BoxGeometry(VOXEL_SIZE, VOXEL_SIZE, VOXEL_SIZE),
+              blockMat
+            );
+            mesh.position.set(
+              cx + (i - 1) * SPACING,
+              (j - 1) * SPACING,
+              (k - 1) * SPACING
+            );
+            chainGroup.add(mesh);
+          }
+        }
       }
     }
-    const edgePos = new Float32Array(edges.length * 3);
-    for (let k = 0; k < edges.length; k += 2) {
-      const a = edges[k], b = edges[k+1];
-      edgePos[k*3]   = pos[a*3];
-      edgePos[k*3+1] = pos[a*3+1];
-      edgePos[k*3+2] = pos[a*3+2];
-      edgePos[k*3+3] = pos[b*3];
-      edgePos[k*3+4] = pos[b*3+1];
-      edgePos[k*3+5] = pos[b*3+2];
-    }
-    const edgesGeo = new THREE.BufferGeometry();
-    edgesGeo.setAttribute('position', new THREE.BufferAttribute(edgePos, 3));
-    const edgesMat = new THREE.LineBasicMaterial({
-      transparent: true,
-      opacity: 0.4,
-      depthWrite: false
-    });
-    scene.add(new THREE.LineSegments(edgesGeo, edgesMat));
 
+    // build linking voxels
+    LINK_CUBES.forEach(x => {
+      const link = new THREE.Mesh(
+        new THREE.BoxGeometry(VOXEL_SIZE * 0.6, VOXEL_SIZE * 0.6, VOXEL_SIZE * 0.6),
+        linkMat
+      );
+      link.position.set(x * SPACING * (CLUSTER_SIZE/3), 0, 0);
+      chainGroup.add(link);
+    });
+
+    // animate + render
     const clock = new THREE.Clock();
     function animate() {
       controls.update();
       const t = clock.getElapsedTime();
-      const arr = nodesGeo.attributes.position.array;
-      for (let i = 0; i < NODE_COUNT; i++) {
-        const i3 = i * 3;
-        const dx = arr[i3], dy = arr[i3+1], dz = arr[i3+2];
-        const offset = Math.sin(t * 1.5 + dx * 4 + dy * 3) * 0.05;
-        arr[i3]   = dx + dx * offset;
-        arr[i3+1] = dy + dy * offset;
-        arr[i3+2] = dz + dz * offset;
-      }
-      nodesGeo.attributes.position.needsUpdate = true;
+
+      // gentle group rotation
+      chainGroup.rotation.x = Math.sin(t*0.2) * 0.1;
+      chainGroup.rotation.y += 0.0015;
 
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     }
 
+    // resize handler
     function onResize() {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
