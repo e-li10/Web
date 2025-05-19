@@ -16,16 +16,24 @@ body{
   font-family:'Cormorant Garamond',serif;
   color:#444;
   line-height:1.45;
+  opacity:0;                           /* start invisible  */
+  animation:fade .4s ease forwards;    /* then fade in     */
 }
+
 /* clock */
 #clock{
   position:fixed;
-  top:15px;right:28px;
-  font:400 18px 'Cormorant Garamond',serif;
+  top:12px;
+  right:16px;
+  font:400 16px 'Cormorant Garamond',serif;
 }
+
 /* layout */
 main{max-width:680px;margin:100px auto 0;padding:0 24px;text-align:left}
 .post{font-size:22px;font-weight:300;margin-bottom:18px}
+
+/* simple fade keyframes */
+@keyframes fade{to{opacity:1}}
 </style>
 </head>
 
@@ -44,8 +52,7 @@ const clk=document.getElementById('clock');
 function tick(){
   const now=new Date();
   clk.textContent=new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/New_York',
-    hour12:false,
+    timeZone:'America/New_York',hour12:false,
     hour:'2-digit',minute:'2-digit',second:'2-digit'
   }).format(now);
   clk.dateTime=now.toISOString();
@@ -54,95 +61,50 @@ tick();
 setInterval(tick,1000);
 </script>
 
-<!-- favicon sparkline: instant placeholder, real price in title from the start -->
+<!-- favicon sparkline script (unchanged) -->
 <script>
-/* ---------- DOM plumbing ---------- */
-const icon = document.createElement('link');
-icon.rel   = 'icon';
-icon.type  = 'image/png';
-icon.sizes = '16x16';
-document.head.appendChild(icon);
+const icon=document.createElement('link');
+icon.rel='icon';icon.type='image/png';icon.sizes='16x16';document.head.appendChild(icon);
 
-const cvs = document.createElement('canvas');
-cvs.width = cvs.height = 16;
-const ctx = cvs.getContext('2d');
+const cvs=document.createElement('canvas');cvs.width=cvs.height=16;
+const ctx=cvs.getContext('2d');
+const LEN=20;let tape=[];let seeded=true;
 
-/* ---------- config & state ---------- */
-const LEN = 20;                      // points in the sparkline
-let tape = [];                       // price series
-let seeded = true;                   // placeholder flag
-
-/* ---------- helpers ---------- */
 async function fetchPrice(){
-  const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
+  const r=await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
   return +((await r.json()).data.amount);
 }
 function randomWalk(base){
-  const arr = [];
-  const vol = base * 0.005;          // ±0.5 %
-  let v = base;
-  for(let i = 0; i < LEN; i++){
-    v += (Math.random()*2 - 1) * vol;
-    arr.push(v);
-  }
-  return arr;
+  const arr=[];const vol=base*0.005;let v=base;
+  for(let i=0;i<LEN;i++){v+=(Math.random()*2-1)*vol;arr.push(v);}return arr;
 }
 function draw(){
-  const hi = Math.max(...tape), lo = Math.min(...tape) || 1;
-  ctx.clearRect(0,0,16,16);
-  ctx.beginPath();
+  const hi=Math.max(...tape),lo=Math.min(...tape)||1;
+  ctx.clearRect(0,0,16,16);ctx.beginPath();
   tape.forEach((v,i)=>{
-    const x = i * 16 / (LEN - 1);
-    const y = 15 - ((v - lo)/(hi - lo)) * 15;
-    i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    const x=i*16/(LEN-1),y=15-((v-lo)/(hi-lo))*15;
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
   });
-
-  /* choose the right delta for colour */
-  const change = seeded
-    ? tape.at(-1) - tape[0]          // placeholder phase: whole slope
-    : tape.at(-1) - tape.at(-2);     // live phase: last tick
-
-  ctx.strokeStyle = change > 0 ? '#0a0'
-                   : change < 0 ? '#c00'
-                   : '#555';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  icon.href = cvs.toDataURL('image/png');
+  const change=seeded?tape.at(-1)-tape[0]:tape.at(-1)-tape.at(-2);
+  ctx.strokeStyle=change>0?'#0a0':change<0?'#c00':'#555';
+  ctx.lineWidth=1;ctx.stroke();
+  icon.href=cvs.toDataURL('image/png');
 }
 
-/* ---------- initialise ---------- */
-(async ()=>{
-  /* try to get a real price right away */
-  let price;
-  try{ price = await fetchPrice(); } catch{ /* network hiccup */ }
-
-  /* title uses the real price if we have it, placeholder “Ξ —” otherwise */
-  document.title = price
-    ? `Ξ ${Math.round(price).toLocaleString('en-US')} USD`
-    : 'Ξ —';
-
-  /* seed the tape with a random-walk around whatever we have */
-  const base = price || (3000 + Math.random()*500);
-  tape = randomWalk(base);
-  draw();                              // placeholder icon now visible
-
-  /* ---------- 30-second cadence ---------- */
-  setInterval(async ()=>{
+(async()=>{
+  let price;try{price=await fetchPrice();}catch{}
+  document.title=price?`Ξ ${Math.round(price).toLocaleString('en-US')} USD`:'Ξ —';
+  const base=price||(3000+Math.random()*500);tape=randomWalk(base);draw();
+  setInterval(async()=>{
     try{
-      const p = await fetchPrice();
-      document.title = `Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
-
-      if(seeded){                      // first successful tick → go live
-        tape = Array(LEN).fill(p);     // wipe placeholder
-        seeded = false;
-      }else{
-        tape.push(p); tape.shift();
-      }
+      const p=await fetchPrice();
+      document.title=`Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
+      if(seeded){tape=Array(LEN).fill(p);seeded=false;}
+      else{tape.push(p);tape.shift();}
       draw();
-    }catch{
-      console.warn('price fetch failed');
-    }
-  }, 30_000);
+    }catch{console.warn('price fetch failed');}
+  },30000);
 })();
 </script>
+</body>
+</html>
