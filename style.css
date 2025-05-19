@@ -1,4 +1,4 @@
-/* fill viewport, white background */
+/* fill viewport, white background, no scroll */
 html, body {
   margin: 0;
   padding: 0;
@@ -8,30 +8,30 @@ html, body {
 }
 
 body {
-  font: 400 1rem/1.6 'Inter', sans-serif;
+  font: 400 1.1rem/1.6 'Inter', sans-serif;
   color: #222;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* header */
+/* HEADER: pushed down & larger text */
 header {
-  margin-top: 2vh;
+  margin-top: 4vh;
   text-align: center;
   z-index: 1;
 }
 h1 {
-  font: 600 3.5rem 'Cormorant Garamond', serif;
-  margin: 0 0 0.75rem;
+  font: 600 4rem 'Cormorant Garamond', serif;
+  margin: 0 0 1rem;
 }
 nav {
   display: inline-flex;
   gap: 2rem;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
 }
 nav a {
-  font: 400 1.25rem 'Cormorant Garamond', serif;
+  font: 400 1.4rem 'Cormorant Garamond', serif;
   color: #222;
   text-decoration: none;
 }
@@ -39,35 +39,41 @@ nav a:hover {
   text-decoration: underline;
 }
 
-/* canvas network */
+/* ART canvas: half the viewport height */
 #art {
-  flex: 1;
-  width: 100%;
+  flex: none;
+  width: 90vw;
+  max-width: 1200px;
+  height: 50vh;
   display: block;
+  background: #fff;
 }
 
-/* live clock */
+/* live clock: slightly larger */
 #clock {
   position: absolute;
-  top: 1rem;
-  right: 1.5rem;
-  font: 1rem 'Cormorant Garamond', serif;
+  top: 2rem;
+  right: 2rem;
+  font: 1.25rem 'Cormorant Garamond', serif;
   color: #222;
   pointer-events: none;
 }
 
-/* mobile tweaks */
+/* MOBILE tweaks */
 @media (max-width: 600px) {
   header {
-    margin-top: 5vh;
+    margin-top: 6vh;
   }
   h1 {
-    font-size: 2.75rem;
+    font-size: 3rem;
   }
   nav a {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
   }
   #clock {
-    font-size: 0.9rem;
+    font-size: 1rem;
+  }
+  #art {
+    height: 40vh;
   }
 }
