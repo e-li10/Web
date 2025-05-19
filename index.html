@@ -26,6 +26,25 @@
   <canvas id="network"></canvas>
 
   <!-- Live Eastern-Time clock -->
+<div id="clock"></div>
+
+<script>
+  // CLOCK (uncaffeinated)
+  function updateClock() {
+    document.getElementById('clock').textContent =
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        hour12:   false,
+        hour:    '2-digit',
+        minute:  '2-digit',
+        second:  '2-digit'
+      }).format(new Date());
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+
+  <!-- Live Eastern-Time clock -->
   <div id="clock"></div>
 
 <script>
