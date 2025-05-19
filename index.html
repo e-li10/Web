@@ -4,20 +4,13 @@
   <meta charset="UTF-8" />
   <title>Eric Li</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Fonts -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Cormorant+Garamond:wght@400;600&display=swap"
     rel="stylesheet"
   />
-
-  <!-- Three.js (non-module) -->
-  <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/three@0.150.0/examples/js/controls/OrbitControls.js"></script>
-
-  <!-- Site styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -33,118 +26,105 @@
   <div id="clock"></div>
 
   <script>
-    // Live Eastern-Time clock
+    // Clock
     function updateClock() {
-      document.getElementById('clock').textContent =
-        new Intl.DateTimeFormat('en-US', {
-          timeZone: 'America/New_York',
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        }).format(new Date());
+      document.getElementById('clock').textContent = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).format(new Date());
     }
     updateClock();
     setInterval(updateClock, 1000);
   </script>
 
-  <script>
-    // Three.js voxel chain
-    (function() {
-      const canvas   = document.getElementById('art');
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setClearColor(0xffffff, 1);
+  <script type="module">
+    // Import Three.js and OrbitControls as modules
+    import * as THREE from 'https://unpkg.com/three@0.150.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.150.0/examples/jsm/controls/OrbitControls.js';
 
-      const scene  = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
-      camera.position.set(0, 1, 4);
+    // Renderer
+    const canvas   = document.getElementById('art');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0xffffff, 1);
 
-      // Lights
-      scene.add(new THREE.AmbientLight(0x888888));
-      const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-      dir.position.set(5, 10, 7);
-      scene.add(dir);
+    // Scene + camera
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
+    camera.position.set(0, 1, 4);
 
-      // Controls
-      const controls = new THREE.OrbitControls(camera, canvas);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.07;
+    // Lights
+    scene.add(new THREE.AmbientLight(0x888888));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(5, 10, 7);
+    scene.add(dir);
 
-      // Materials
-      const blockMat = new THREE.MeshStandardMaterial({
-        color: 0x00ccff,
-        metalness: 0.3,
-        roughness: 0.5
-      });
-      const linkMat = new THREE.MeshStandardMaterial({
-        color: 0xff8800,
-        metalness: 0.3,
-        roughness: 0.5
-      });
+    // Controls
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
 
-      // Voxel-chain group
-      const GROUP = new THREE.Group();
-      scene.add(GROUP);
+    // Materials
+    const blockMat = new THREE.MeshStandardMaterial({ color: 0x00ccff, metalness: 0.3, roughness: 0.5 });
+    const linkMat  = new THREE.MeshStandardMaterial({ color: 0xff8800, metalness: 0.3, roughness: 0.5 });
 
-      const CLUSTERS = 3;
-      const SIZE     = 3;    // each cluster is 3×3×3
-      const VOXEL    = 0.3;
-      const STEP     = 0.35;
-      const LINKS    = [ -1, 1 ]; // link positions in cluster-unit space
+    // Build the voxel chain
+    const GROUP   = new THREE.Group();
+    scene.add(GROUP);
 
-      // build clusters
-      for (let c = 0; c < CLUSTERS; c++) {
-        const offsetX = (c - 1) * STEP * SIZE;
-        for (let x = 0; x < SIZE; x++) {
-          for (let y = 0; y < SIZE; y++) {
-            for (let z = 0; z < SIZE; z++) {
-              const cube = new THREE.Mesh(
-                new THREE.BoxGeometry(VOXEL, VOXEL, VOXEL),
-                blockMat
-              );
-              cube.position.set(
-                offsetX + (x - 1) * STEP,
-                (y - 1) * STEP,
-                (z - 1) * STEP
-              );
-              GROUP.add(cube);
-            }
+    const CLUSTERS = 3, SIZE = 3, VOXEL = 0.3, STEP = 0.35;
+    const LINKS    = [-1, 1]; // link positions
+
+    // Clusters
+    for (let c = 0; c < CLUSTERS; c++) {
+      const ox = (c - 1) * STEP * SIZE;
+      for (let x = 0; x < SIZE; x++) {
+        for (let y = 0; y < SIZE; y++) {
+          for (let z = 0; z < SIZE; z++) {
+            const cube = new THREE.Mesh(
+              new THREE.BoxGeometry(VOXEL, VOXEL, VOXEL),
+              blockMat
+            );
+            cube.position.set(ox + (x - 1) * STEP, (y - 1) * STEP, (z - 1) * STEP);
+            GROUP.add(cube);
           }
         }
       }
+    }
 
-      // build link-voxels
-      LINKS.forEach(p => {
-        const link = new THREE.Mesh(
-          new THREE.BoxGeometry(VOXEL * 0.6, VOXEL * 0.6, VOXEL * 0.6),
-          linkMat
-        );
-        link.position.set(p * STEP * (SIZE/2), 0, 0);
-        GROUP.add(link);
-      });
+    // Links
+    LINKS.forEach(p => {
+      const link = new THREE.Mesh(
+        new THREE.BoxGeometry(VOXEL * 0.6, VOXEL * 0.6, VOXEL * 0.6),
+        linkMat
+      );
+      link.position.set(p * (STEP * (SIZE / 2)), 0, 0);
+      GROUP.add(link);
+    });
 
-      // resize & render loop
-      function onResize() {
-        const w = canvas.clientWidth;
-        const h = canvas.clientHeight;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-      }
-      window.addEventListener('resize', onResize);
-      onResize();
+    // Resize & render loop
+    window.addEventListener('resize', resize);
+    resize();
 
-      const clock = new THREE.Clock();
-      (function animate() {
-        controls.update();
-        const t = clock.getElapsedTime();
-        GROUP.rotation.x = Math.sin(t * 0.2) * 0.1;
-        GROUP.rotation.y += 0.0015;
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
-      })();
+    const clock = new THREE.Clock();
+    (function animate() {
+      controls.update();
+      const t = clock.getElapsedTime();
+      GROUP.rotation.x = Math.sin(t * 0.2) * 0.1;
+      GROUP.rotation.y += 0.0015;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
     })();
+
+    function resize() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
   </script>
 </body>
 </html>
