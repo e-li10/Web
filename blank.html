@@ -4,39 +4,25 @@
 <meta charset="UTF-8">
 <title>Eric Li – Blank</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:'Cormorant Garamond',serif;
-}
+body{font-family:'Cormorant Garamond',serif}
 #clock{
-  position:fixed;
-  top:15px;
-  right:28px;
+  position:fixed;top:15px;right:28px;
   font:400 18px 'Cormorant Garamond',serif;
   color:#444;
 }
 </style>
 </head>
-
 <body>
 <time id="clock"></time>
-
 <script>
-const clk=document.getElementById('clock');
-function tick(){
-  clk.textContent=new Intl.DateTimeFormat('en-US',{
-    timeZone:'America/New_York',
-    hour12:false,
-    hour:'2-digit',minute:'2-digit',second:'2-digit'
-  }).format(new Date());
-}
-tick(); setInterval(tick,1000);
+const c=document.getElementById('clock');
+function t(){c.textContent=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())}
+t();setInterval(t,1000);
 </script>
 </body>
 </html>
