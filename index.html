@@ -1,32 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Eric Li</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Cormorant+Garamond:wght@400;600&display=swap"
-    rel="stylesheet"
-  >
-
-  <!-- Site styles -->
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
   <header>
-    <!-- Transparent 3D art canvas -->
-    <canvas id="art"></canvas>
-
     <h1>Eric Li</h1>
     <nav>
       <a href="/">Home</a>
       <a href="/thoughts">Thoughts</a>
     </nav>
   </header>
+
+  <canvas id="art"></canvas>
 
   <!-- Live Eastern-Time clock -->
   <div id="clock"></div>
@@ -45,91 +25,98 @@
     setInterval(updateClock, 1000);
   </script>
 
-  <!-- Three.js (for the 3D art) -->
-  <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
-  <script>
-  (function(){
+  <!-- Three.js token-mesh network -->
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.150.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.150.0/examples/jsm/controls/OrbitControls.js';
+
     const canvas = document.getElementById('art');
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
     camera.position.set(0, 0, 3);
 
-    // Lights
-    scene.add(new THREE.AmbientLight(0x222222));
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(5, 5, 5);
-    scene.add(dir);
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
 
-    // Geometry: a sphere whose vertices we'll deform
-    const geo = new THREE.SphereBufferGeometry(1, 64, 64);
-    const posAttr = geo.attributes.position;
-    const normAttr = geo.attributes.normal;
-    const count = posAttr.count;
-    // store originals
-    const orig = new Float32Array(posAttr.array);
-
-    // Material: black points
-    const mat = new THREE.PointsMaterial({
-      color: 0x000000,
-      size: 0.03,
+    // generate spherical nodes
+    const NODE_COUNT = 200;
+    const pos = new Float32Array(NODE_COUNT * 3);
+    for (let i = 0; i < NODE_COUNT; i++) {
+      const θ = Math.acos(2 * Math.random() - 1);
+      const φ = 2 * Math.PI * Math.random();
+      const i3 = i * 3;
+      pos[i3]   = Math.sin(θ) * Math.cos(φ);
+      pos[i3+1] = Math.sin(θ) * Math.sin(φ);
+      pos[i3+2] = Math.cos(θ);
+    }
+    const nodesGeo = new THREE.BufferGeometry();
+    nodesGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const nodesMat = new THREE.PointsMaterial({
+      size: 0.04,
       transparent: true,
-      opacity: 0.7
+      opacity: 0.8,
+      depthWrite: false
     });
-    const points = new THREE.Points(geo, mat);
-    scene.add(points);
+    const nodes = new THREE.Points(nodesGeo, nodesMat);
+    scene.add(nodes);
 
-    // Handle resize
-    function onResize(){
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const w = rect.width, h = rect.height;
+    // random edges
+    const edges = [];
+    for (let i = 0; i < NODE_COUNT; i++) {
+      for (let j = i + 1; j < NODE_COUNT; j++) {
+        if (Math.random() < 0.02) edges.push(i, j);
+      }
+    }
+    const edgePos = new Float32Array(edges.length * 3);
+    for (let k = 0; k < edges.length; k += 2) {
+      const a = edges[k], b = edges[k+1];
+      edgePos[k*3]   = pos[a*3];
+      edgePos[k*3+1] = pos[a*3+1];
+      edgePos[k*3+2] = pos[a*3+2];
+      edgePos[k*3+3] = pos[b*3];
+      edgePos[k*3+4] = pos[b*3+1];
+      edgePos[k*3+5] = pos[b*3+2];
+    }
+    const edgesGeo = new THREE.BufferGeometry();
+    edgesGeo.setAttribute('position', new THREE.BufferAttribute(edgePos, 3));
+    const edgesMat = new THREE.LineBasicMaterial({
+      transparent: true,
+      opacity: 0.4,
+      depthWrite: false
+    });
+    scene.add(new THREE.LineSegments(edgesGeo, edgesMat));
+
+    const clock = new THREE.Clock();
+    function animate() {
+      controls.update();
+      const t = clock.getElapsedTime();
+      const arr = nodesGeo.attributes.position.array;
+      for (let i = 0; i < NODE_COUNT; i++) {
+        const i3 = i * 3;
+        const dx = arr[i3], dy = arr[i3+1], dz = arr[i3+2];
+        const offset = Math.sin(t * 1.5 + dx * 4 + dy * 3) * 0.05;
+        arr[i3]   = dx + dx * offset;
+        arr[i3+1] = dy + dy * offset;
+        arr[i3+2] = dz + dz * offset;
+      }
+      nodesGeo.attributes.position.needsUpdate = true;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    function onResize() {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
       renderer.setSize(w, h, false);
-      camera.aspect = w/h;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
     }
     window.addEventListener('resize', onResize);
     onResize();
-
-    // Track pointer for interactivity
-    const mouse = { x: 0 };
-    window.addEventListener('pointermove', e => {
-      const r = canvas.getBoundingClientRect();
-      mouse.x = ((e.clientX - r.left)/r.width)*2 - 1;
-    });
-
-    const clock = new THREE.Clock();
-    // Animation loop
-    (function animate(){
-      const t = clock.getElapsedTime();
-      const arr = posAttr.array;
-      // deformation factor based on mouse X
-      const factor = (mouse.x * 0.5 + 0.5) * 0.8 + 0.2;
-
-      // deform each vertex along its normal
-      for (let i = 0; i < count; i++) {
-        const i3 = i*3;
-        const ox = orig[i3],     oy = orig[i3+1],     oz = orig[i3+2];
-        const nx = normAttr.array[i3],
-              ny = normAttr.array[i3+1],
-              nz = normAttr.array[i3+2];
-        // wave + noise pattern
-        const d = Math.sin(t*2 + ox*5 + oy*4 + oz*3) * 0.2 * factor;
-        arr[i3]   = ox + nx * d;
-        arr[i3+1] = oy + ny * d;
-        arr[i3+2] = oz + nz * d;
-      }
-      posAttr.needsUpdate = true;
-
-      // gentle rotation
-      points.rotation.x += 0.001;
-      points.rotation.y += 0.0015;
-
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    })();
-  })();
+    animate();
   </script>
-</body>
-</html>
