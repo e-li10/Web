@@ -27,9 +27,9 @@
 
 /* ---------- shared values ---------- */
 :root{
-  --ink:#444;                 /* softened charcoal */
+  --ink:#444;
   --stack-width:680px;
-  --top-space:45px;           /* offset from very top */
+  --top-space:45px;
 }
 
 /* ---------- layout ---------- */
@@ -38,7 +38,7 @@ body{
   color:var(--ink);
   text-align:center;
   line-height:1.45;
-  opacity:0;                  /* fade-in */
+  opacity:0;
   animation:fade .4s ease forwards;
 }
 
@@ -52,7 +52,7 @@ main{
   width:131px;
   height:auto;
   display:block;
-  margin:0 auto 25px;         /* gap between image and name */
+  margin:0 auto 25px;
   object-fit:cover;
 }
 
@@ -70,7 +70,7 @@ nav{
   justify-content:center;
   gap:100px;
   font-size:22px;
-  transform:translateX(10px); /* nudge row right 10 px */
+  transform:translateX(14px);   /* refined nudge for “Ideas” */
 }
 
 nav a{
@@ -84,9 +84,10 @@ nav a:hover{opacity:.6}
 /* hair-line divider */
 .divider{
   width:70%;
-  margin:90px auto 0;         /* 90 px below nav */
+  margin:90px auto 0;
   border:none;
   border-top:1px solid var(--ink);
+  transform:translateX(14px);   /* keep line aligned with nav */
 }
 
 /* clock */
@@ -124,14 +125,14 @@ nav a:hover{opacity:.6}
 
   <nav>
     <a href="/">Home</a>
-    <a href="/thoughts">Thoughts</a>
+    <a href="/ideas">Ideas</a>
   </nav>
 
   <hr class="divider">
 </main>
 
 <script>
-/* 24-hour clock, Eastern Time */
+/* 24-hour Eastern Time clock */
 const clk=document.getElementById('clock');
 function tick(){
   clk.textContent=new Intl.DateTimeFormat('en-US',{
