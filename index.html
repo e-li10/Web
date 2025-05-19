@@ -34,22 +34,20 @@ body{
 
 main{width:var(--stack);margin:var(--top) auto 0}
 
-/* hero */
-#hero{width:131px;height:auto;object-fit:cover;display:block;margin:0 auto 22px}   /* was 25px */
+/* hero → name gap: tighten aggressively */
+#hero{
+  width:131px;height:auto;object-fit:cover;
+  display:block;
+  margin:0 auto 10px;      /* was 25px */
+}
 
-/* name */
-h1{font-size:60px;font-weight:400;letter-spacing:.01em;margin-bottom:20px}
-h1 a{color:inherit;text-decoration:none}
-
-/* Thoughts & Contact row */
+/* nav → hairline gap: open it up */
 #links{
   display:flex;justify-content:center;gap:80px;
   font-size:22px;font-weight:400;letter-spacing:.04em;
-  margin-bottom:112px;                                               /* was 90px */
+  margin-bottom:140px;     /* was 90px */
 }
-#links a{color:var(--ink);text-decoration:none;transition:opacity .25s}
-#links a:hover{opacity:.6}
-
+      
 /* divider */
 .divider{width:70%;margin:0 auto;border:none;border-top:1px solid var(--ink)}
 
