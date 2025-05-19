@@ -42,37 +42,30 @@
       margin: 0 auto 5px;
     }
 
-    /* Heading */
-    h1 {
-      font-weight: 400;
-    }
-    h1 a {
-      color: var(--ink);
-      text-decoration: none;
-      font-weight: inherit;
-    }
+/* Heading: bump up a touch */
+h1 {
+  font-weight: 400;
+  font-size: 32px;    /* ↑ Eric Li slightly larger */
+  margin-bottom: 8px; /* small gap down to nav */
+}
 
-    /* Nav links */
-    #links {
-      display: flex;
-      justify-content: center;
-      gap: 2em;
-      font-size: 15px;
-      font-weight: 400;
-      margin-bottom: 25px;
-    }
-    #links a {
-      color: var(--ink);
-      text-decoration: none;
-    }
+/* Nav links: pull down toward divider */
+#links {
+  display: flex;
+  justify-content: center;
+  gap: 2em;
+  font-size: 16px;    /* match subhead size */
+  font-weight: 400;
+  margin-bottom: 15px;/* ↓ bring Thoughts/Contact closer to the line */
+}
 
-    /* Divider */
-    .divider {
-      width: 70%;
-      margin: 0 auto;
-      border: none;
-      border-top: 1px solid var(--ink);
-    }
+/* Divider: if it still feels too close, add a little top-margin */
+.divider {
+  width: 70%;
+  margin: 6px auto 0; /* ↑ pushes line down by 6px */
+  border: none;
+  border-top: 1px solid var(--ink);
+}
 
     /* Clock */
     #clock {
