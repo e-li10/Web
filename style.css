@@ -1,12 +1,12 @@
 /* reset */
 *{margin:0;padding:0;box-sizing:border-box}
 
-/* palette + spacing */
+/* palette + baseline rhythm */
 :root{
-  --space:24px;               /* tighter vertical rhythm */
-  --dark:#242424;
-  --muted:#444;
-  --faint:#666;
+  --space:22px;               /* tighter vertical rhythm */
+  --dark:#2b2b2b;             /* softer than solid black */
+  --muted:#555;
+  --faint:#777;
 }
 
 /* layout */
@@ -14,31 +14,32 @@ body{
   font-family:'Cormorant Garamond',serif;
   color:var(--dark);
   text-align:center;
-  line-height:1.4;
+  line-height:1.42;
   padding-top:var(--space);
   opacity:0;
-  animation:fade .5s ease .1s forwards;
+  animation:fade .5s ease .05s forwards;
 }
 
 .container{
-  max-width:560px;            /* narrower column */
+  max-width:680px;            /* same width as Othman’s column */
   margin:0 auto;
 }
 
 /* hero image */
 #hero{
-  width:180px;                /* smaller hero */
+  width:180px;                /* smaller = less “template” */
   height:180px;
   object-fit:cover;
   display:block;
   margin:0 auto var(--space);
+  border-radius:2px;          /* micro-detail: softens the box */
 }
 
 /* name */
 h1{
-  font-size:48px;             /* down from 56 */
-  font-weight:400;
-  letter-spacing:.01em;
+  font-size:52px;             /* fits a 1.25× scale */
+  font-weight:300;
+  letter-spacing:.015em;
   margin-bottom:var(--space);
 }
 
@@ -46,19 +47,18 @@ h1{
 nav{
   display:flex;
   justify-content:center;
-  gap:64px;                   /* keep it even under the name */
-  margin-bottom:var(--space);
+  gap:60px;                   /* even spacing under the name */
+  margin-bottom:calc(var(--space)*1.5);
 }
 
 nav a{
-  font-size:22px;             /* lighter touch */
+  font-size:20px;
   font-weight:300;
   color:var(--muted);
   text-decoration:none;
-  letter-spacing:.03em;
+  letter-spacing:.05em;
   transition:opacity .25s;
 }
-
 nav a:hover{opacity:.6}
 
 /* clock */
