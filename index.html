@@ -31,7 +31,7 @@
   <!-- Live Eastern-Time clock (unchanged) -->
   <div id="clock"></div>
 
-  <!-- Clock Script (identical to original) -->
+  <!-- Clock Script (unchanged) -->
   <script>
     function updateClock() {
       document.getElementById('clock').textContent =
@@ -47,28 +47,37 @@
     setInterval(updateClock, 1000);
   </script>
 
-  <!-- Reaction-Diffusion Script (updated only for WebGL2 fallback & float‐buffer checks) -->
+  <!-- Reaction-Diffusion Script -->
   <script>
   (function(){
     const cvs = document.getElementById('rd');
-    // Try WebGL2 first, then WebGL1
-    const gl = cvs.getContext('webgl2') || cvs.getContext('webgl');
+
+    // 1) Try WebGL2 first (float-render targets are core there)
+    let gl = cvs.getContext('webgl2');
+    const isWebGL2 = !!gl;
+
+    // 2) Fallback to WebGL1
+    if (!gl) {
+      gl = cvs.getContext('webgl');
+    }
     if (!gl) {
       console.error('WebGL not supported');
       return;
     }
 
-    // Float‐buffer extension: built-in on WebGL2, or try both names on WebGL1
-    const ext = gl.getExtension('EXT_color_buffer_float')
-              || gl.getExtension('WEBGL_color_buffer_float');
-    if (!ext) {
-      console.warn('Float‐buffer extension unavailable; aborting RD.');
-      return;
+    // 3) If still on WebGL1, require the float-buffer extension
+    if (!isWebGL2) {
+      const ext = gl.getExtension('EXT_color_buffer_float')
+                || gl.getExtension('WEBGL_color_buffer_float');
+      if (!ext) {
+        console.warn('Float-buffer extension unavailable; aborting RD.');
+        return;
+      }
+      gl.getExtension('OES_texture_float');
+      gl.getExtension('OES_texture_float_linear');
     }
-    gl.getExtension('OES_texture_float');
-    gl.getExtension('OES_texture_float_linear');
 
-    // Resize to 80vw × 240px
+    // Resize canvas to 80vw × 240px
     function resize(){
       cvs.width  = innerWidth * 0.8 | 0;
       cvs.height = 240;
@@ -108,7 +117,7 @@
         gl_FragColor = vec4(A,B,0,1);
       }
     `;
-    function compile(src, type){
+    function compile(src, type) {
       const s = gl.createShader(type);
       gl.shaderSource(s, src);
       gl.compileShader(s);
@@ -131,19 +140,24 @@
     // Full-screen quad
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      -1,-1,  1,-1,  -1,1,
-      -1,1,   1,-1,   1,1
-    ]), gl.STATIC_DRAW);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1,-1, 1,-1, -1,1,  -1,1, 1,-1, 1,1]),
+      gl.STATIC_DRAW
+    );
     const aLoc = gl.getAttribLocation(prog, 'a');
     gl.enableVertexAttribArray(aLoc);
     gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
 
-    // Float textures & FBOs
-    function makeTex(){
+    // Decide internal format: RGBA32F on WebGL2, RGBA on WebGL1
+    const internalFormat = isWebGL2 ? gl.RGBA32F : gl.RGBA;
+
+    // Create two float textures + FBOs for ping-pong
+    function makeTex() {
       const t = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
+      gl.texImage2D(
+        gl.TEXTURE_2D, 0, internalFormat,
         cvs.width, cvs.height, 0,
         gl.RGBA, gl.FLOAT, null
       );
@@ -154,44 +168,52 @@
     const texA = makeTex(), texB = makeTex();
     const fboA = gl.createFramebuffer(), fboB = gl.createFramebuffer();
 
-    // Seed (A=1 everywhere, B=small square)
+    // Seed A=1 everywhere, B=1 in a small square
     const seed = new Float32Array(cvs.width * cvs.height * 4);
-    for (let y=0; y<cvs.height; y++) {
-      for (let x=0; x<cvs.width; x++) {
+    for (let y = 0; y < cvs.height; y++) {
+      for (let x = 0; x < cvs.width; x++) {
         const i = (y * cvs.width + x) * 4;
         seed[i]   = 1.0;
-        seed[i+1] = (x>cvs.width/2-10 && x<cvs.width/2+10 &&
-                     y>cvs.height/2-10 && y<cvs.height/2+10)
+        seed[i+1] = (x > cvs.width/2-10 && x < cvs.width/2+10 &&
+                     y > cvs.height/2-10 && y < cvs.height/2+10)
                   ? 1.0 : 0.0;
         seed[i+2] = 0.0;
         seed[i+3] = 1.0;
       }
     }
     gl.bindTexture(gl.TEXTURE_2D, texA);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, internalFormat,
       cvs.width, cvs.height, 0,
       gl.RGBA, gl.FLOAT, seed
     );
 
-    // Ping-pong and render loop
     let pingTex = texA, pongTex = texB;
     let pingFBO = fboA, pongFBO = fboB;
+
+    // Render loop
     function step(){
+      // write into pongFBO
       gl.bindFramebuffer(gl.FRAMEBUFFER, pongFBO);
-      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-                              gl.TEXTURE_2D, pingTex, 0);
+      gl.framebufferTexture2D(
+        gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+        gl.TEXTURE_2D, pingTex, 0
+      );
       gl.bindTexture(gl.TEXTURE_2D, pingTex);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
+      // blit to screen
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.bindTexture(gl.TEXTURE_2D, pingTex);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
+      // swap
       [pingTex, pongTex] = [pongTex, pingTex];
       [pingFBO, pongFBO] = [pongFBO, pingFBO];
       requestAnimationFrame(step);
     }
     step();
+
   })();
   </script>
 </body>
