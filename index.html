@@ -19,31 +19,35 @@
       <a href="/">Home</a>
       <a href="/thoughts">Thoughts</a>
     </nav>
+
+    <hr class="divider">
   </div>
 
   <time id="clock"></time>
 
   <script>
+    /* header image — random pick keeps page fresh */
     const pics = [
-      "https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1505664063602-ad8dcead31b1?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80"
+      'https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1505664063602-ad8dcead31b1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80'
     ];
-    document.getElementById("hero").src =
+    document.getElementById('hero').src =
       pics[Math.floor(Math.random() * pics.length)];
 
-    const clock = document.getElementById("clock");
-    function renderClock() {
-      clock.textContent = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
+    /* 24-hour Eastern Time clock */
+    const clock = document.getElementById('clock');
+    function tick() {
+      clock.textContent = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
         hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
       }).format(new Date());
     }
-    renderClock();
-    setInterval(renderClock, 1000);
+    tick();
+    setInterval(tick, 1000);
   </script>
 </body>
 </html>
