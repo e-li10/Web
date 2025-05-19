@@ -17,10 +17,10 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- transparent, full-screen network canvas -->
-  <canvas id="bg"></canvas>
-
   <header>
+    <!-- 3D art canvas sits here, fully transparent except for the mesh -->
+    <canvas id="art"></canvas>
+
     <h1>Eric Li</h1>
     <nav>
       <a href="/">Home</a>
@@ -45,88 +45,64 @@
     setInterval(updateClock, 1000);
   </script>
 
-  <!-- Crypto × AI network animation -->
+  <!-- 3D Crypto × AI Art (Three.js) -->
+  <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
   <script>
   (function(){
-    const cvs = document.getElementById('bg');
-    const ctx = cvs.getContext('2d');
-    let W, H;
+    const canvas = document.getElementById('art');
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
 
-    // resize to full viewport
-    function resize() {
-      W = cvs.width  = window.innerWidth;
-      H = cvs.height = window.innerHeight;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 5);
+
+    // lighting (subtle ambient + directional for slight shading)
+    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+    dir.position.set(5, 5, 5);
+    scene.add(dir);
+
+    // Geometry: an icosahedron wireframe + matching point cloud
+    const geo = new THREE.IcosahedronGeometry(1.5, 1);
+
+    // Wireframe
+    const wire = new THREE.LineSegments(
+      new THREE.WireframeGeometry(geo),
+      new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.4, transparent: true })
+    );
+    scene.add(wire);
+
+    // Points at each vertex
+    const pts = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({ color: 0x000000, size: 0.05 })
+    );
+    scene.add(pts);
+
+    // Resize handling
+    function onResize(){
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
     }
-    window.addEventListener('resize', resize);
-    resize();
+    window.addEventListener('resize', onResize);
+    onResize();
 
-    // build nodes
-    const NODE_COUNT = 60;
-    const MAX_DIST  = 150;
-    const nodes = [];
-    for (let i = 0; i < NODE_COUNT; i++) {
-      nodes.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.2,
-        vy: (Math.random() - 0.5) * 0.2,
-        r: 1 + Math.random() * 3
-      });
+    // Animation loop
+    function animate() {
+      // slow, opposite rotations for depth
+      wire.rotation.x  += 0.0007;
+      wire.rotation.y  -= 0.001;
+      pts.rotation.x   += 0.0005;
+      pts.rotation.z   += 0.0008;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
     }
-
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      ctx.globalCompositeOperation = 'lighter';
-
-      // draw connections
-      for (let i = 0; i < NODE_COUNT; i++) {
-        for (let j = i + 1; j < NODE_COUNT; j++) {
-          const a = nodes[i], b = nodes[j];
-          const dx = a.x - b.x, dy = a.y - b.y;
-          const d = Math.hypot(dx, dy);
-          if (d < MAX_DIST) {
-            ctx.strokeStyle = `rgba(0,170,255,${(1 - d / MAX_DIST) * 0.3})`;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
-        }
-      }
-
-      // draw glowing nodes
-      nodes.forEach(n => {
-        const grd = ctx.createRadialGradient(
-          n.x, n.y, n.r,
-          n.x, n.y, n.r * 5
-        );
-        grd.addColorStop(0, 'rgba(0,170,255,0.9)');
-        grd.addColorStop(1, 'rgba(0,170,255,0)');
-        ctx.fillStyle = grd;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.r * 5, 0, 2 * Math.PI);
-        ctx.fill();
-      });
-
-      ctx.globalCompositeOperation = 'source-over';
-    }
-
-    function update() {
-      nodes.forEach(n => {
-        n.x += n.vx;
-        n.y += n.vy;
-        if (n.x < 0 || n.x > W) n.vx *= -1;
-        if (n.y < 0 || n.y > H) n.vy *= -1;
-      });
-    }
-
-    (function loop(){
-      draw();
-      update();
-      requestAnimationFrame(loop);
-    })();
-
+    animate();
   })();
   </script>
 </body>
