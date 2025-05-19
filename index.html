@@ -11,18 +11,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
 <!-- Preload Lozowick print -->
-<link
-  rel="preload"
-  as="image"
-  href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
+<link rel="preload" as="image"
+      href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 
 :root{
   --ink:#444;
-  --stack-width:680px;
-  --top-space:45px;
+  --stack:680px;
+  --top:45px;
 }
 
 body{
@@ -34,42 +32,42 @@ body{
   animation:fade .4s ease forwards;
 }
 
-main{
-  width:var(--stack-width);
-  margin:var(--top-space) auto 0;
-}
+main{width:var(--stack);margin:var(--top) auto 0}
 
-/* image */
+/* hero */
 #hero{
-  width:131px;
-  height:auto;
-  display:block;
-  margin:0 auto 25px;
-  object-fit:cover;
+  width:131px;height:auto;object-fit:cover;
+  display:block;margin:0 auto 25px;
 }
 
-/* name – now a link */
+/* headline */
 h1{
-  font-size:60px;
-  font-weight:400;
-  letter-spacing:.01em;
-  margin-bottom:24px;
+  font-size:60px;font-weight:400;letter-spacing:.01em;
+  margin-bottom:20px;
 }
 h1 a{color:inherit;text-decoration:none}
 
-/* hair-line divider */
+/* Thoughts link */
+#thoughts{
+  font-size:22px;font-weight:400;
+  letter-spacing:.04em;
+  color:var(--ink);
+  text-decoration:none;
+  display:inline-block;
+  margin-bottom:90px;          /* leaves same gap to divider */
+  transition:opacity .25s;
+}
+#thoughts:hover{opacity:.6}
+
+/* divider */
 .divider{
-  width:70%;
-  margin:90px auto 0;
-  border:none;
-  border-top:1px solid var(--ink);
+  width:70%;margin:0 auto;
+  border:none;border-top:1px solid var(--ink);
 }
 
 /* clock */
 #clock{
-  position:fixed;
-  top:15px;
-  right:28px;
+  position:fixed;top:15px;right:28px;
   font:400 18px 'Cormorant Garamond',serif;
   color:var(--ink);
 }
@@ -82,14 +80,17 @@ h1 a{color:inherit;text-decoration:none}
 <time id="clock"></time>
 
 <main>
+  <!-- Louis Lozowick – New York (1923) -->
   <img id="hero"
        src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
-       width="131" height="131"
-       fetchpriority="high"
+       width="131" height="131" fetchpriority="high"
        alt="Louis Lozowick, New York (1923)">
 
-  <!-- link wraps the name -->
-  <h1><a href="blank.html">Eric Li</a></h1>
+  <!-- LinkedIn link -->
+  <h1><a href="https://www.linkedin.com/in/eric-li-226850249/" target="_blank" rel="noopener">Eric Li</a></h1>
+
+  <!-- Thoughts link -->
+  <a id="thoughts" href="blank.html">Thoughts</a>
 
   <hr class="divider">
 </main>
