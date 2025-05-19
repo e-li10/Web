@@ -1,67 +1,66 @@
-/* reset */
+/* ---------- reset ---------- */
 *{margin:0;padding:0;box-sizing:border-box}
 
-/* shared values */
+/* ---------- shared values ---------- */
 :root{
-  --charcoal:#2c2d2e;   /* text colour */
-  --space:32px;         /* consistent vertical rhythm */
+  --charcoal:#2c2d2e;   /* text colour from reference */
+  --base-y:32px;        /* baseline vertical rhythm */
+  --col-w:680px;        /* fixed stack width from capture */
 }
 
-/* page */
+/* ---------- page ---------- */
 body{
   font-family:'Cormorant Garamond',serif;
   color:var(--charcoal);
   text-align:center;
   line-height:1.45;
-  padding-top:var(--space);
+  padding-top:var(--base-y);
 }
 
-/* centred stack */
-.column{
-  max-width:680px;      /* width */
+/* centred column */
+.stack{
+  width:var(--col-w);
   margin:0 auto;
 }
 
-/* hero image */
+/* hero image (exact 160 × 160 in reference) */
 #hero{
-  width:200px;
-  height:200px;
+  width:160px;
+  height:160px;
   object-fit:cover;
   display:block;
-  margin:0 auto var(--space);
+  margin:0 auto calc(var(--base-y)*0.9); /* 28 px gap */
 }
 
 /* name */
 h1{
-  font-size:64px;       /* ok */
+  font-size:64px;         /* matches capture */
   font-weight:400;
   letter-spacing:.01em;
-  margin-bottom:24px;   /* gap before nav */
+  margin-bottom:24px;
 }
 
-/* navigation */
+/* navigation row */
 nav{
   display:flex;
   justify-content:center;
-  gap:110px;            /* visual balance under name */
+  gap:124px;              /* tuned so links sit symmetrically */
+  font-size:22px;
 }
 
 nav a{
-  font-size:22px;
-  font-weight:400;
   color:var(--charcoal);
   text-decoration:none;
   letter-spacing:.04em;
   transition:opacity .25s;
 }
-
 nav a:hover{opacity:.6}
 
-/* clock */
+/* ---------- clock ---------- */
 #clock{
   position:fixed;
-  top:14px;
-  right:26px;
-  font-size:18px;       /* a touch larger, same font */
+  top:14px;               /* aligns to font cap height */
+  right:28px;
+  font-size:18px;         /* 2 px larger than body */
   color:var(--charcoal);
 }
