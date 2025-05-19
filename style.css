@@ -44,15 +44,14 @@ nav a{
 nav a:hover{text-decoration:underline;}
 
 /* Decentralized Agent Network canvas */
-#network {
+#rd {
   display: block;
   margin: 3rem auto 0;
   width: 80vw;
   max-width: 1200px;
-  height: 200px;        /* matches the JS resize */
+  height: 240px;
   pointer-events: none;
   border: none;
-}
 }
 
 #clock{
