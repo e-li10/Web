@@ -10,6 +10,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
+  <!-- Preload hero for first-paint stability -->
+  <link rel="preload" as="image"
+        href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -26,6 +30,7 @@
       line-height: 1.45;
       opacity: 0;
       animation: fade .4s ease forwards;
+      animation-fill-mode: forwards;          /* keep final state (Safari fix) */
     }
 
     main {
@@ -33,23 +38,20 @@
       margin: var(--top) auto 0;
     }
 
-    /* Hero image: 129px */
+    /* Hero image */
     #hero {
-      width: 129px;
-      height: auto;
+      width: 129px; height: 190px;            /* height reserves layout space */
       object-fit: cover;
       display: block;
       margin: 0 auto 5px;
     }
 
-    /* Heading: bump up a touch */
     h1 {
       font-weight: 400;
       font-size: 32px;
       margin-bottom: 8px;
     }
 
-    /* Nav links: pull down toward divider */
     #links {
       display: flex;
       justify-content: center;
@@ -59,7 +61,6 @@
       margin-bottom: 15px;
     }
 
-    /* Divider: if it still feels too close, add a little top-margin */
     .divider {
       width: 70%;
       margin: 6px auto 0;
@@ -67,7 +68,6 @@
       border-top: 1px solid var(--ink);
     }
 
-    /* Clock */
     #clock {
       position: fixed;
       top: 12px;
@@ -78,41 +78,31 @@
 
     @keyframes fade { to { opacity: 1 } }
 
-    /* force links to black, no underline */
-    h1 a,
-    #links a {
+    h1 a, #links a {
       color: var(--ink) !important;
       text-decoration: none !important;
     }
   </style>
 </head>
 <body>
-  <!-- live Eastern-time clock -->
   <time id="clock" aria-label="Current time" datetime=""></time>
 
   <main>
-    <img
-      id="hero"
-      src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
-      alt="Louis Lozowick, New York (1923)"
-    >
-
+    <img id="hero"
+         src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
+         alt="Louis Lozowick, New York (1923)">
     <h1>
       <a href="https://www.linkedin.com/in/eric-li-226850249/"
-         target="_blank" rel="noopener">
-        Eric Li
-      </a>
+         target="_blank" rel="noopener">Eric Li</a>
     </h1>
-
     <div id="links">
       <a href="thoughts.html">Thoughts</a>
       <a href="mailto:eric_li1@college.harvard.edu">Contact</a>
     </div>
-
     <hr class="divider">
   </main>
 
-  <!-- clock update script -->
+  <!-- Clock -->
   <script>
     const clk = document.getElementById('clock');
     function tick() {
@@ -125,14 +115,14 @@
       clk.dateTime = now.toISOString();
     }
     tick();
-    setInterval(tick, 1000);
+    let tickTimer = setInterval(tick, 1000);
   </script>
 
-  <!-- favicon sparkline script -->
+  <!-- Favicon ETH sparkline -->
   <script>
     const icon = document.createElement('link');
-    icon.rel   = 'icon';
-    icon.type  = 'image/png';
+    icon.rel = 'icon';
+    icon.type = 'image/png';
     icon.sizes = '16x16';
     document.head.appendChild(icon);
 
@@ -143,10 +133,16 @@
     const LEN = 20;
     let tape = [];
     let seeded = true;
+    let lastPrice = null;
 
     async function fetchPrice() {
-      const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
-      return +((await r.json()).data.amount);
+      try {
+        const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
+        if (!r.ok) throw new Error(r.status);
+        return +((await r.json()).data.amount);
+      } catch {
+        return null;                             // keep previous price if fetch fails
+      }
     }
 
     function randomWalk(base) {
@@ -171,8 +167,8 @@
       });
 
       const change = seeded
-        ? tape.at(-1) - tape[0]
-        : tape.at(-1) - tape.at(-2);
+        ? tape[tape.length - 1] - tape[0]
+        : tape[tape.length - 1] - tape[tape.length - 2];
 
       ctx.strokeStyle = change > 0 ? '#0a0'
                        : change < 0 ? '#c00'
@@ -183,35 +179,49 @@
       icon.href = cvs.toDataURL('image/png');
     }
 
-    (async () => {
-      let price;
-      try { price = await fetchPrice(); } catch {}
-      document.title = price
-        ? `Ξ ${Math.round(price).toLocaleString('en-US')} USD`
+    async function initSparkline() {
+      lastPrice = await fetchPrice();
+      document.title = lastPrice
+        ? `Ξ ${Math.round(lastPrice).toLocaleString('en-US')} USD`
         : 'Ξ —';
 
-      const base = price || (3000 + Math.random() * 500);
+      const base = lastPrice || (3000 + Math.random() * 500);
       tape = randomWalk(base);
       draw();
+    }
+    await initSparkline();
 
-      setInterval(async () => {
-        try {
-          const p = await fetchPrice();
-          document.title = `Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
+    async function updateSparkline() {
+      const p = await fetchPrice();
+      if (p !== null) {                           // only update if we got a price
+        lastPrice = p;
+        document.title = `Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
 
-          if (seeded) {
-            tape = Array(LEN).fill(p);
-            seeded = false;
-          } else {
-            tape.push(p);
-            tape.shift();
-          }
-          draw();
-        } catch {
-          console.warn('price fetch failed');
+        if (seeded) {
+          tape = Array(LEN).fill(p);
+          seeded = false;
+        } else {
+          tape.push(p);
+          tape.shift();
         }
-      }, 30000);
-    })();
+        draw();
+      }
+    }
+
+    let priceTimer = setInterval(updateSparkline, 30000);
+
+    /* Pause timers when the tab is hidden */
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        clearInterval(tickTimer);
+        clearInterval(priceTimer);
+      } else {
+        tick();                       // immediate refresh
+        tickTimer   = setInterval(tick, 1000);
+        updateSparkline();
+        priceTimer  = setInterval(updateSparkline, 30000);
+      }
+    });
   </script>
 </body>
 </html>
