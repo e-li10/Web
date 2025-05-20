@@ -10,7 +10,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
-  <!-- Preload hero to avoid layout shift -->
   <link rel="preload" as="image"
         href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
 
@@ -39,8 +38,7 @@
     }
 
     #hero{
-      width:129px;
-      height:190px;             /* fixes CLS */
+      width:129px;height:190px;
       object-fit:cover;
       display:block;
       margin:0 auto 5px;
@@ -60,17 +58,31 @@
     .divider{
       width:70%;
       margin:6px auto 0;
-      border:none;
-      border-top:1px solid var(--ink);
+      border:none;border-top:1px solid var(--ink);
     }
 
-    /* “ghost ticker” */
-    #ticker{
-      font:400 18px 'Cormorant Garamond',serif;
-      text-align:center;
-      margin-top:24px;
-      pointer-events:none;
+    /* clock */
+    #clock{
+      position:fixed;top:12px;right:16px;
+      font:400 16px 'Cormorant Garamond',serif;
+      color:var(--ink);
     }
+
+    /* floating quote container */
+    #ticker{
+      position:fixed;inset:0;pointer-events:none;
+      z-index:5;
+    }
+    .quote{
+      position:fixed;
+      font:300 16px 'Cormorant Garamond',serif;
+      color:var(--ink);
+      animation:fadeCycle 6s ease-in-out forwards;
+      white-space:nowrap;
+      user-select:none;
+    }
+
+    @keyframes fade{to{opacity:1}}
 
     @keyframes fadeCycle{
       0%   {opacity:0;transform:translateY(6px) scale(.94)}
@@ -78,16 +90,6 @@
       70%  {opacity:1}
       100% {opacity:0;transform:translateY(-6px) scale(1.04)}
     }
-
-    #clock{
-      position:fixed;
-      top:12px;
-      right:16px;
-      font:400 16px 'Cormorant Garamond',serif;
-      color:var(--ink);
-    }
-
-    @keyframes fade{to{opacity:1}}
 
     h1 a,#links a{color:var(--ink)!important;text-decoration:none!important}
   </style>
@@ -108,9 +110,7 @@
       <a href="mailto:eric_li1@college.harvard.edu">Contact</a>
     </div>
     <hr class="divider">
-
-    <!-- live price ticker -->
-    <div id="ticker" aria-live="polite"><span id="quote"></span></div>
+    <div id="ticker" aria-hidden="true"></div>
   </main>
 
   <!-- live clock -->
@@ -141,22 +141,20 @@
       const ctx=cvs.getContext('2d');
 
       const LEN=20;
-      let tape=[];
-      let seeded=true;
-      let priceTimer;
+      let tape=[];let seeded=true;let priceTimer;
 
       async function fetchPrice(){
         try{
           const r=await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
-          if(!r.ok)throw new Error(r.status);
+          if(!r.ok)throw 0;
           return+((await r.json()).data.amount);
         }catch{return null;}
       }
 
-      function randomWalk(base){
-        const arr=[],vol=base*0.005;let v=base;
-        for(let i=0;i<LEN;i++){v+=(Math.random()*2-1)*vol;arr.push(v);}
-        return arr;
+      function randomWalk(b){
+        const a=[],vol=b*0.005;let v=b;
+        for(let i=0;i<LEN;i++){v+=(Math.random()*2-1)*vol;a.push(v);}
+        return a;
       }
 
       function draw(){
@@ -184,10 +182,9 @@
       }
 
       (async()=>{
-        const starter=await fetchPrice();
-        document.title=starter?`Ξ ${Math.round(starter).toLocaleString('en-US')} USD`:'Ξ —';
-        tape=randomWalk(starter||3500);
-        draw();
+        const start=await fetchPrice();
+        document.title=start?`Ξ ${Math.round(start).toLocaleString('en-US')} USD`:'Ξ —';
+        tape=randomWalk(start||3500);draw();
         priceTimer=setInterval(update,30000);
       })();
 
@@ -201,13 +198,12 @@
     })();
   </script>
 
-  <!-- top-25 random-coin ghost ticker -->
+  <!-- floating random-price quotes -->
   <script>
     (function(){
-      const span=document.getElementById('quote');
-      let coins=[];
-      const fmt=n=>n.toLocaleString('en-US',
-                    {style:'currency',currency:'USD',maximumFractionDigits:2});
+      const box=document.getElementById('ticker');
+      let coins=[];const excluded=/usd|usdt|usdc|busd|dai|usdp|usdd|tusd|fdusd/i;
+      const fmt=n=>n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
 
       async function loadTop25(){
         try{
@@ -215,33 +211,50 @@
             'https://api.coingecko.com/api/v3/coins/markets' +
             '?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&sparkline=false'
           );
-          if(!r.ok)throw new Error(r.status);
-          coins=(await r.json()).map(c=>c.id);
+          if(!r.ok)throw 0;
+          coins=(await r.json())
+            .filter(c=>!excluded.test(c.symbol))      // drop stablecoins
+            .map(c=>({id:c.id,sym:c.symbol.toUpperCase()}));
         }catch{
-          coins=['bitcoin','ethereum'];        // fallback list
+          coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];
         }
       }
 
-      async function fetchPrice(id){
+      async function price(id){
         const r=await fetch(
           `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`
         );
-        if(!r.ok)throw new Error(r.status);
+        if(!r.ok)throw 0;
         return (await r.json())[id].usd;
       }
 
-      async function cycle(){
-        if(!coins.length)await loadTop25();
-        const id=coins[Math.floor(Math.random()*coins.length)];
-        try{
-          const p=await fetchPrice(id);
-          span.textContent=`${id.toUpperCase()} ${fmt(p)}`;
-          span.style.animation='none';void span.offsetWidth;
-          span.style.animation='fadeCycle 6s ease-in-out';
-        }catch(e){console.error(e);}
-        setTimeout(cycle,6000);
+      function spot(){
+        const vw=window.innerWidth,vh=window.innerHeight;
+        const safeLeft=(vw-680)/2-80,safeRight=(vw+680)/2+80;
+        let x,y;
+        do{
+          x=Math.random()*(vw-140);   // leave ~140px buffer for text width
+        }while(x>safeLeft&&x<safeRight);
+        y=60+Math.random()*(vh-120);  // avoid clock/top edge
+        return {x,y};
       }
-      cycle();
+
+      async function drop(){
+        if(!coins.length)await loadTop25();
+        const pick=coins[Math.floor(Math.random()*coins.length)];
+        try{
+          const p=await price(pick.id);
+          const node=document.createElement('span');
+          node.className='quote';
+          node.textContent=`${pick.sym} ${fmt(p)}`;
+          const pos=spot();
+          node.style.left=`${pos.x}px`;node.style.top=`${pos.y}px`;
+          box.appendChild(node);
+          setTimeout(()=>node.remove(),6000);
+        }catch(e){console.error(e);}
+        setTimeout(drop,6000);
+      }
+      drop();
     })();
   </script>
 </body>
