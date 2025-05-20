@@ -122,7 +122,8 @@
   const cvs = document.createElement('canvas');
   cvs.width = cvs.height = 16;
   const ctx  = cvs.getContext('2d', { willReadFrequently: false });
-
+  ctx.translate(2, 0);               // nudge everything 2 px to the right
+  
   // ───── parameters you can tweak ─────
   const LIFETIME   = 180;   // frames per blot (~3 s at 60 fps)
   const SEED_COUNT = 4;     // starting pixels (higher = busier blot)
