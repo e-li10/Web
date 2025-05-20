@@ -10,78 +10,86 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
-  <!-- Preload hero for first-paint stability -->
+  <!-- Preload hero to avoid layout shift -->
   <link rel="preload" as="image"
         href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *{margin:0;padding:0;box-sizing:border-box}
 
-    :root {
-      --ink: #000;
-      --stack: 680px;
-      --top: 35px;
+    :root{
+      --ink:#000;
+      --stack:680px;
+      --top:35px;
     }
 
-    body {
-      font-family: 'Cormorant Garamond', serif;
-      color: var(--ink);
-      text-align: center;
-      line-height: 1.45;
-      opacity: 0;
-      animation: fade .4s ease forwards;
-      animation-fill-mode: forwards;          /* keep final state (Safari fix) */
+    body{
+      font-family:'Cormorant Garamond',serif;
+      color:var(--ink);
+      text-align:center;
+      line-height:1.45;
+      opacity:0;
+      animation:fade .4s ease forwards;
+      animation-fill-mode:forwards;
     }
 
-    main {
-      width: var(--stack);
-      margin: var(--top) auto 0;
+    main{
+      width:var(--stack);
+      margin:var(--top) auto 0;
     }
 
-    /* Hero image */
-    #hero {
-      width: 129px; height: 190px;            /* height reserves layout space */
-      object-fit: cover;
-      display: block;
-      margin: 0 auto 5px;
+    #hero{
+      width:129px;
+      height:190px;             /* fixes CLS */
+      object-fit:cover;
+      display:block;
+      margin:0 auto 5px;
     }
 
-    h1 {
-      font-weight: 400;
-      font-size: 32px;
-      margin-bottom: 8px;
+    h1{font-weight:400;font-size:32px;margin-bottom:8px}
+
+    #links{
+      display:flex;
+      justify-content:center;
+      gap:2em;
+      font-size:16px;
+      font-weight:400;
+      margin-bottom:15px;
     }
 
-    #links {
-      display: flex;
-      justify-content: center;
-      gap: 2em;
-      font-size: 16px;
-      font-weight: 400;
-      margin-bottom: 15px;
+    .divider{
+      width:70%;
+      margin:6px auto 0;
+      border:none;
+      border-top:1px solid var(--ink);
     }
 
-    .divider {
-      width: 70%;
-      margin: 6px auto 0;
-      border: none;
-      border-top: 1px solid var(--ink);
+    /* “ghost ticker” */
+    #ticker{
+      font:400 18px 'Cormorant Garamond',serif;
+      text-align:center;
+      margin-top:24px;
+      pointer-events:none;
     }
 
-    #clock {
-      position: fixed;
-      top: 12px;
-      right: 16px;
-      font: 400 16px 'Cormorant Garamond', serif;
-      color: var(--ink);
+    @keyframes fadeCycle{
+      0%   {opacity:0;transform:translateY(6px) scale(.94)}
+      15%  {opacity:1;transform:translateY(0)  scale(1)}
+      70%  {opacity:1}
+      100% {opacity:0;transform:translateY(-6px) scale(1.04)}
     }
 
-    @keyframes fade { to { opacity: 1 } }
-
-    h1 a, #links a {
-      color: var(--ink) !important;
-      text-decoration: none !important;
+    #clock{
+      position:fixed;
+      top:12px;
+      right:16px;
+      font:400 16px 'Cormorant Garamond',serif;
+      color:var(--ink);
     }
+
+    @keyframes fade{to{opacity:1}}
+
+    h1 a,#links a{color:var(--ink)!important;text-decoration:none!important}
   </style>
 </head>
 <body>
@@ -100,128 +108,141 @@
       <a href="mailto:eric_li1@college.harvard.edu">Contact</a>
     </div>
     <hr class="divider">
+
+    <!-- live price ticker -->
+    <div id="ticker" aria-live="polite"><span id="quote"></span></div>
   </main>
 
-  <!-- Clock -->
+  <!-- live clock -->
   <script>
-    const clk = document.getElementById('clock');
-    function tick() {
-      const now = new Date();
-      clk.textContent = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/New_York',
-        hour12: false,
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    const clk=document.getElementById('clock');
+    function tick(){
+      const now=new Date();
+      clk.textContent=new Intl.DateTimeFormat('en-US',{
+        timeZone:'America/New_York',
+        hour12:false,
+        hour:'2-digit',minute:'2-digit',second:'2-digit'
       }).format(now);
-      clk.dateTime = now.toISOString();
+      clk.dateTime=now.toISOString();
     }
     tick();
-    let tickTimer = setInterval(tick, 1000);
+    let tickTimer=setInterval(tick,1000);
   </script>
 
-  <!-- Favicon ETH sparkline -->
+  <!-- favicon sparkline -->
   <script>
-    const icon = document.createElement('link');
-    icon.rel = 'icon';
-    icon.type = 'image/png';
-    icon.sizes = '16x16';
-    document.head.appendChild(icon);
+    (function(){
+      const icon=document.createElement('link');
+      icon.rel='icon';icon.type='image/png';icon.sizes='16x16';
+      document.head.appendChild(icon);
 
-    const cvs = document.createElement('canvas');
-    cvs.width = cvs.height = 16;
-    const ctx = cvs.getContext('2d');
+      const cvs=document.createElement('canvas');
+      cvs.width=cvs.height=16;
+      const ctx=cvs.getContext('2d');
 
-    const LEN = 20;
-    let tape = [];
-    let seeded = true;
-    let lastPrice = null;
+      const LEN=20;
+      let tape=[];
+      let seeded=true;
+      let priceTimer;
 
-    async function fetchPrice() {
-      try {
-        const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
-        if (!r.ok) throw new Error(r.status);
-        return +((await r.json()).data.amount);
-      } catch {
-        return null;                             // keep previous price if fetch fails
+      async function fetchPrice(){
+        try{
+          const r=await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
+          if(!r.ok)throw new Error(r.status);
+          return+((await r.json()).data.amount);
+        }catch{return null;}
       }
-    }
 
-    function randomWalk(base) {
-      const arr = [];
-      const vol = base * 0.005;
-      let v = base;
-      for (let i = 0; i < LEN; i++) {
-        v += (Math.random() * 2 - 1) * vol;
-        arr.push(v);
+      function randomWalk(base){
+        const arr=[],vol=base*0.005;let v=base;
+        for(let i=0;i<LEN;i++){v+=(Math.random()*2-1)*vol;arr.push(v);}
+        return arr;
       }
-      return arr;
-    }
 
-    function draw() {
-      const hi = Math.max(...tape), lo = Math.min(...tape) || 1;
-      ctx.clearRect(0, 0, 16, 16);
-      ctx.beginPath();
-      tape.forEach((v, i) => {
-        const x = i * 16 / (LEN - 1);
-        const y = 15 - ((v - lo) / (hi - lo)) * 15;
-        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-      });
+      function draw(){
+        const hi=Math.max(...tape),lo=Math.min(...tape)||1;
+        ctx.clearRect(0,0,16,16);ctx.beginPath();
+        tape.forEach((v,i)=>{
+          const x=i*16/(LEN-1);
+          const y=15-((v-lo)/(hi-lo))*15;
+          i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+        });
+        const change=seeded?tape[LEN-1]-tape[0]:tape[LEN-1]-tape[LEN-2];
+        ctx.strokeStyle=change>0?'#0a0':change<0?'#c00':'#555';
+        ctx.lineWidth=1;ctx.stroke();
+        icon.href=cvs.toDataURL('image/png');
+      }
 
-      const change = seeded
-        ? tape[tape.length - 1] - tape[0]
-        : tape[tape.length - 1] - tape[tape.length - 2];
-
-      ctx.strokeStyle = change > 0 ? '#0a0'
-                       : change < 0 ? '#c00'
-                       : '#555';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      icon.href = cvs.toDataURL('image/png');
-    }
-
-    async function initSparkline() {
-      lastPrice = await fetchPrice();
-      document.title = lastPrice
-        ? `Ξ ${Math.round(lastPrice).toLocaleString('en-US')} USD`
-        : 'Ξ —';
-
-      const base = lastPrice || (3000 + Math.random() * 500);
-      tape = randomWalk(base);
-      draw();
-    }
-    await initSparkline();
-
-    async function updateSparkline() {
-      const p = await fetchPrice();
-      if (p !== null) {                           // only update if we got a price
-        lastPrice = p;
-        document.title = `Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
-
-        if (seeded) {
-          tape = Array(LEN).fill(p);
-          seeded = false;
-        } else {
-          tape.push(p);
-          tape.shift();
+      async function update(){
+        const p=await fetchPrice();
+        if(p!==null){
+          document.title=`Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
+          if(seeded){tape=Array(LEN).fill(p);seeded=false;}
+          else{tape.push(p);tape.shift();}
+          draw();
         }
+      }
+
+      (async()=>{
+        const starter=await fetchPrice();
+        document.title=starter?`Ξ ${Math.round(starter).toLocaleString('en-US')} USD`:'Ξ —';
+        tape=randomWalk(starter||3500);
         draw();
-      }
-    }
+        priceTimer=setInterval(update,30000);
+      })();
 
-    let priceTimer = setInterval(updateSparkline, 30000);
+      document.addEventListener('visibilitychange',()=>{
+        if(document.hidden){clearInterval(tickTimer);clearInterval(priceTimer);}
+        else{
+          tick();tickTimer=setInterval(tick,1000);
+          update();priceTimer=setInterval(update,30000);
+        }
+      });
+    })();
+  </script>
 
-    /* Pause timers when the tab is hidden */
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        clearInterval(tickTimer);
-        clearInterval(priceTimer);
-      } else {
-        tick();                       // immediate refresh
-        tickTimer   = setInterval(tick, 1000);
-        updateSparkline();
-        priceTimer  = setInterval(updateSparkline, 30000);
+  <!-- top-25 random-coin ghost ticker -->
+  <script>
+    (function(){
+      const span=document.getElementById('quote');
+      let coins=[];
+      const fmt=n=>n.toLocaleString('en-US',
+                    {style:'currency',currency:'USD',maximumFractionDigits:2});
+
+      async function loadTop25(){
+        try{
+          const r=await fetch(
+            'https://api.coingecko.com/api/v3/coins/markets' +
+            '?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&sparkline=false'
+          );
+          if(!r.ok)throw new Error(r.status);
+          coins=(await r.json()).map(c=>c.id);
+        }catch{
+          coins=['bitcoin','ethereum'];        // fallback list
+        }
       }
-    });
+
+      async function fetchPrice(id){
+        const r=await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`
+        );
+        if(!r.ok)throw new Error(r.status);
+        return (await r.json())[id].usd;
+      }
+
+      async function cycle(){
+        if(!coins.length)await loadTop25();
+        const id=coins[Math.floor(Math.random()*coins.length)];
+        try{
+          const p=await fetchPrice(id);
+          span.textContent=`${id.toUpperCase()} ${fmt(p)}`;
+          span.style.animation='none';void span.offsetWidth;
+          span.style.animation='fadeCycle 6s ease-in-out';
+        }catch(e){console.error(e);}
+        setTimeout(cycle,6000);
+      }
+      cycle();
+    })();
   </script>
 </body>
 </html>
