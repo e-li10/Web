@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
+  <!-- Pre-load hero to stop layout shift -->
   <link rel="preload" as="image"
         href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
 
@@ -32,50 +33,27 @@
       animation-fill-mode:forwards;
     }
 
-    main{
-      width:var(--stack);
-      margin:var(--top) auto 0;
-    }
+    main{width:var(--stack);margin:var(--top) auto 0}
 
-    #hero{
-      width:129px;height:190px;
-      object-fit:cover;
-      display:block;
-      margin:0 auto 5px;
-    }
+    #hero{width:129px;height:190px;object-fit:cover;display:block;margin:0 auto 5px}
 
     h1{font-weight:400;font-size:32px;margin-bottom:8px}
 
-    #links{
-      display:flex;
-      justify-content:center;
-      gap:2em;
-      font-size:16px;
-      font-weight:400;
-      margin-bottom:15px;
-    }
+    #links{display:flex;justify-content:center;gap:2em;font-size:16px;font-weight:400;margin-bottom:15px}
 
-    .divider{
-      width:70%;
-      margin:6px auto 0;
-      border:none;border-top:1px solid var(--ink);
-    }
+    .divider{width:70%;margin:6px auto 0;border:none;border-top:1px solid var(--ink)}
 
-    /* clock */
     #clock{
       position:fixed;top:12px;right:16px;
       font:400 16px 'Cormorant Garamond',serif;
       color:var(--ink);
     }
 
-    /* floating quote container */
-    #ticker{
-      position:fixed;inset:0;pointer-events:none;
-      z-index:5;
-    }
+    /* floating quotes */
+    #ticker{position:fixed;inset:0;pointer-events:none;z-index:5}
     .quote{
       position:fixed;
-      font:300 16px 'Cormorant Garamond',serif;
+      font:300 14px 'Cormorant Garamond',serif;
       color:var(--ink);
       animation:fadeCycle 6s ease-in-out forwards;
       white-space:nowrap;
@@ -83,12 +61,11 @@
     }
 
     @keyframes fade{to{opacity:1}}
-
     @keyframes fadeCycle{
-      0%   {opacity:0;transform:translateY(6px) scale(.94)}
-      15%  {opacity:1;transform:translateY(0)  scale(1)}
-      70%  {opacity:1}
-      100% {opacity:0;transform:translateY(-6px) scale(1.04)}
+      0%{opacity:0;transform:translateY(6px) scale(.94)}
+      15%{opacity:1;transform:translateY(0) scale(1)}
+      70%{opacity:1}
+      100%{opacity:0;transform:translateY(-6px) scale(1.04)}
     }
 
     h1 a,#links a{color:var(--ink)!important;text-decoration:none!important}
@@ -119,8 +96,7 @@
     function tick(){
       const now=new Date();
       clk.textContent=new Intl.DateTimeFormat('en-US',{
-        timeZone:'America/New_York',
-        hour12:false,
+        timeZone:'America/New_York',hour12:false,
         hour:'2-digit',minute:'2-digit',second:'2-digit'
       }).format(now);
       clk.dateTime=now.toISOString();
@@ -129,7 +105,7 @@
     let tickTimer=setInterval(tick,1000);
   </script>
 
-  <!-- favicon sparkline -->
+  <!-- favicon ETH sparkline -->
   <script>
     (function(){
       const icon=document.createElement('link');
@@ -141,7 +117,7 @@
       const ctx=cvs.getContext('2d');
 
       const LEN=20;
-      let tape=[];let seeded=true;let priceTimer;
+      let tape=[],seeded=true,priceTimer;
 
       async function fetchPrice(){
         try{
@@ -165,8 +141,8 @@
           const y=15-((v-lo)/(hi-lo))*15;
           i?ctx.lineTo(x,y):ctx.moveTo(x,y);
         });
-        const change=seeded?tape[LEN-1]-tape[0]:tape[LEN-1]-tape[LEN-2];
-        ctx.strokeStyle=change>0?'#0a0':change<0?'#c00':'#555';
+        const ch=seeded?tape[LEN-1]-tape[0]:tape[LEN-1]-tape[LEN-2];
+        ctx.strokeStyle=ch>0?'#0a0':ch<0?'#c00':'#555';
         ctx.lineWidth=1;ctx.stroke();
         icon.href=cvs.toDataURL('image/png');
       }
@@ -198,64 +174,66 @@
     })();
   </script>
 
-  <!-- floating random-price quotes -->
+  <!-- floating market-cap quotes (no stables) -->
   <script>
-    (function(){
-      const box=document.getElementById('ticker');
-      let coins=[];const excluded=/usd|usdt|usdc|busd|dai|usdp|usdd|tusd|fdusd/i;
-      const fmt=n=>n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
+  (function(){
+    const box=document.getElementById('ticker');
+    const fmt=n=>n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
+    const noStable=/^(usd|usdt|usdc|busd|dai|usdp|usdd|tusd|fdusd)$/i;
 
-      async function loadTop25(){
-        try{
-          const r=await fetch(
-            'https://api.coingecko.com/api/v3/coins/markets' +
-            '?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&sparkline=false'
-          );
-          if(!r.ok)throw 0;
-          coins=(await r.json())
-            .filter(c=>!excluded.test(c.symbol))      // drop stablecoins
-            .map(c=>({id:c.id,sym:c.symbol.toUpperCase()}));
-        }catch{
-          coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];
-        }
-      }
+    let coins=[],priceMap={},lastFetch=0;
 
-      async function price(id){
+    async function refreshData(){
+      const now=Date.now();
+      if(now-lastFetch<60000 && coins.length) return;         // cached <60 s
+      try{
         const r=await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`
+          'https://api.coingecko.com/api/v3/coins/markets' +
+          '?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&sparkline=false'
         );
-        if(!r.ok)throw 0;
-        return (await r.json())[id].usd;
+        if(!r.ok) throw 0;
+        const rows=await r.json();
+        coins=rows.filter(c=>!noStable.test(c.symbol))
+                  .map(c=>({id:c.id,sym:c.symbol.toUpperCase()}));
+        const ids=coins.map(c=>c.id).join(',');
+        const pRes=await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
+        );
+        if(!pRes.ok) throw 0;
+        priceMap=await pRes.json();
+        lastFetch=now;
+      }catch(e){
+        if(!coins.length){coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];}
       }
+    }
 
-      function spot(){
-        const vw=window.innerWidth,vh=window.innerHeight;
-        const safeLeft=(vw-680)/2-80,safeRight=(vw+680)/2+80;
-        let x,y;
-        do{
-          x=Math.random()*(vw-140);   // leave ~140px buffer for text width
-        }while(x>safeLeft&&x<safeRight);
-        y=60+Math.random()*(vh-120);  // avoid clock/top edge
-        return {x,y};
-      }
+    function safeSpot(){
+      const vw=window.innerWidth,vh=window.innerHeight;
+      const safeLeft=(vw-680)/2-80,safeRight=(vw+680)/2+80;
+      let x,y;
+      do{x=Math.random()*(vw-120);}while(x>safeLeft&&x<safeRight);
+      y=80+Math.random()*(vh-160);                 // keep clear of top/hero
+      return{x,y};
+    }
 
-      async function drop(){
-        if(!coins.length)await loadTop25();
-        const pick=coins[Math.floor(Math.random()*coins.length)];
-        try{
-          const p=await price(pick.id);
-          const node=document.createElement('span');
-          node.className='quote';
-          node.textContent=`${pick.sym} ${fmt(p)}`;
-          const pos=spot();
-          node.style.left=`${pos.x}px`;node.style.top=`${pos.y}px`;
-          box.appendChild(node);
-          setTimeout(()=>node.remove(),6000);
-        }catch(e){console.error(e);}
-        setTimeout(drop,6000);
+    async function drop(){
+      await refreshData();
+      const pick=coins[Math.floor(Math.random()*coins.length)];
+      const price=priceMap[pick.id]?.usd;
+      if(price){
+        const span=document.createElement('span');
+        span.className='quote';
+        span.textContent=`${pick.sym} ${fmt(price)}`;
+        const pos=safeSpot();
+        span.style.left=`${pos.x}px`;
+        span.style.top =`${pos.y}px`;
+        box.appendChild(span);
+        setTimeout(()=>span.remove(),6000);
       }
-      drop();
-    })();
+      setTimeout(drop,6000);
+    }
+    drop();
+  })();
   </script>
 </body>
 </html>
