@@ -105,74 +105,76 @@
     let tickTimer=setInterval(tick,1000);
   </script>
 
-  <!-- favicon ETH sparkline -->
-  <script>
-    (function(){
-      const icon=document.createElement('link');
-      icon.rel='icon';icon.type='image/png';icon.sizes='16x16';
-      document.head.appendChild(icon);
+<!-- animated monochrome ink-blot favicon -->
+<script>
+(function () {
+  // ───── canvas boilerplate (same size as before) ─────
+  const icon = document.createElement('link');
+  icon.rel = 'icon';
+  icon.type = 'image/png';
+  icon.sizes = '16x16';
+  document.head.appendChild(icon);
 
-      const cvs=document.createElement('canvas');
-      cvs.width=cvs.height=16;
-      const ctx=cvs.getContext('2d');
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = 16;
+  const ctx  = cvs.getContext('2d', { willReadFrequently: false });
 
-      const LEN=20;
-      let tape=[],seeded=true,priceTimer;
+  // ───── parameters you can tweak ─────
+  const LIFETIME   = 180;   // frames per blot (~3 s at 60 fps)
+  const SEED_COUNT = 4;     // starting pixels (higher = busier blot)
+  const MIRROR_Y   = true;  // vertical symmetry
+  const MIRROR_X   = false; // horizontal, keep off for a tall blot
 
-      async function fetchPrice(){
-        try{
-          const r=await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
-          if(!r.ok)throw 0;
-          return+((await r.json()).data.amount);
-        }catch{return null;}
-      }
+  // ───── helpers ─────
+  const rnd = n => Math.floor(Math.random() * n);
+  const key = (x, y) => (y << 4) | x;       // 4-bit coords pack into 8-bit int
 
-      function randomWalk(b){
-        const a=[],vol=b*0.005;let v=b;
-        for(let i=0;i<LEN;i++){v+=(Math.random()*2-1)*vol;a.push(v);}
-        return a;
-      }
+  // ───── animator loop ─────
+  let pixels = new Set();
+  let frame  = 0;
 
-      function draw(){
-        const hi=Math.max(...tape),lo=Math.min(...tape)||1;
-        ctx.clearRect(0,0,16,16);ctx.beginPath();
-        tape.forEach((v,i)=>{
-          const x=i*16/(LEN-1);
-          const y=15-((v-lo)/(hi-lo))*15;
-          i?ctx.lineTo(x,y):ctx.moveTo(x,y);
-        });
-        const ch=seeded?tape[LEN-1]-tape[0]:tape[LEN-1]-tape[LEN-2];
-        ctx.strokeStyle=ch>0?'#0a0':ch<0?'#c00':'#555';
-        ctx.lineWidth=1;ctx.stroke();
-        icon.href=cvs.toDataURL('image/png');
-      }
+  function seedBlot() {
+    pixels.clear();
+    for (let i = 0; i < SEED_COUNT; i++) {
+      const x = rnd(8), y = rnd(8);
+      pixels.add(key(x, y));
+      if (MIRROR_Y) pixels.add(key(x, 15 - y));
+      if (MIRROR_X) pixels.add(key(15 - x, y));
+      if (MIRROR_Y && MIRROR_X) pixels.add(key(15 - x, 15 - y));
+    }
+  }
 
-      async function update(){
-        const p=await fetchPrice();
-        if(p!==null){
-          document.title=`Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
-          if(seeded){tape=Array(LEN).fill(p);seeded=false;}
-          else{tape.push(p);tape.shift();}
-          draw();
-        }
-      }
+  function grow() {
+    // pick a random existing pixel, sprout one neighbour
+    const arr = [...pixels];
+    const [ox, oy] = [arr[rnd(arr.length)] & 15, arr[rnd(arr.length)] >> 4];
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    const [dx, dy] = dirs[rnd(4)];
+    const nx = ox + dx, ny = oy + dy;
+    if (nx < 0 || nx > 15 || ny < 0 || ny > 15) return;
+    pixels.add(key(nx, ny));
+    if (MIRROR_Y) pixels.add(key(nx, 15 - ny));
+    if (MIRROR_X) pixels.add(key(15 - nx, ny));
+    if (MIRROR_Y && MIRROR_X) pixels.add(key(15 - nx, 15 - ny));
+  }
 
-      (async()=>{
-        const start=await fetchPrice();
-        document.title=start?`Ξ ${Math.round(start).toLocaleString('en-US')} USD`:'Ξ —';
-        tape=randomWalk(start||3500);draw();
-        priceTimer=setInterval(update,30000);
-      })();
+  function draw() {
+    ctx.clearRect(0, 0, 16, 16);
+    ctx.fillStyle = '#000';
+    pixels.forEach(p => ctx.fillRect(p & 15, p >> 4, 1, 1));
+    icon.href = cvs.toDataURL('image/png');
+  }
 
-      document.addEventListener('visibilitychange',()=>{
-        if(document.hidden){clearInterval(tickTimer);clearInterval(priceTimer);}
-        else{
-          tick();tickTimer=setInterval(tick,1000);
-          update();priceTimer=setInterval(update,30000);
-        }
-      });
-    })();
-  </script>
+  function step() {
+    if (frame === 0) seedBlot();
+    if (frame < LIFETIME) grow();
+    draw();
+    frame = (frame + 1) % (LIFETIME + 1);  // when frame resets, new blot seeds
+    requestAnimationFrame(step);
+  }
+  step();
+})();
+</script>
 
   <!-- floating market-cap quotes (no stables) -->
   <script>
