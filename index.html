@@ -177,7 +177,7 @@
       if(sym.includes('USD')) return true;                // stables & pegs
       if(sym.includes('-'))   return true;                // chain-pegged variants
       if(sym.startsWith('W') || sym.startsWith('ST')) return true; // wrapped / staked
-      if(/^(DAI|FRAX|LUSD|SUSD|GUSD|PYUSD|USDP)$/.test(sym)) return true;
+      if(/^(DAI|FRAX|LUSD|SUSD|GUSD|PYUSD|USDP|CBBTC)$/.test(sym)) return true;
       return false;
     }
 
