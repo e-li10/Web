@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ξ —</title>
+<title>Eric Li, Thoughts</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <!-- Cormorant Garamond -->
@@ -16,8 +16,8 @@ body{
   font-family:'Cormorant Garamond',serif;
   color:#444;
   line-height:1.45;
-  opacity:0;                           /* start invisible  */
-  animation:fade .4s ease forwards;    /* then fade in     */
+  opacity:0;
+  animation:fade .4s ease forwards;
 }
 
 /* clock */
@@ -32,7 +32,6 @@ body{
 main{max-width:680px;margin:100px auto 0;padding:0 24px;text-align:left}
 .post{font-size:22px;font-weight:300;margin-bottom:18px}
 
-/* simple fade keyframes */
 @keyframes fade{to{opacity:1}}
 </style>
 </head>
@@ -46,7 +45,6 @@ main{max-width:680px;margin:100px auto 0;padding:0 24px;text-align:left}
   <div class="post">3. Proof-of-Compute (TBD)</div>
 </main>
 
-<!-- clock script -->
 <script>
 const clk=document.getElementById('clock');
 function tick(){
@@ -61,49 +59,16 @@ tick();
 setInterval(tick,1000);
 </script>
 
-<!-- favicon sparkline script (unchanged) -->
+<!-- Rorschach-style animated favicon -->
 <script>
-const icon=document.createElement('link');
-icon.rel='icon';icon.type='image/png';icon.sizes='16x16';document.head.appendChild(icon);
-
-const cvs=document.createElement('canvas');cvs.width=cvs.height=16;
-const ctx=cvs.getContext('2d');
-const LEN=20;let tape=[];let seeded=true;
-
-async function fetchPrice(){
-  const r=await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot');
-  return +((await r.json()).data.amount);
-}
-function randomWalk(base){
-  const arr=[];const vol=base*0.005;let v=base;
-  for(let i=0;i<LEN;i++){v+=(Math.random()*2-1)*vol;arr.push(v);}return arr;
-}
-function draw(){
-  const hi=Math.max(...tape),lo=Math.min(...tape)||1;
-  ctx.clearRect(0,0,16,16);ctx.beginPath();
-  tape.forEach((v,i)=>{
-    const x=i*16/(LEN-1),y=15-((v-lo)/(hi-lo))*15;
-    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
-  });
-  const change=seeded?tape.at(-1)-tape[0]:tape.at(-1)-tape.at(-2);
-  ctx.strokeStyle=change>0?'#0a0':change<0?'#c00':'#555';
-  ctx.lineWidth=1;ctx.stroke();
-  icon.href=cvs.toDataURL('image/png');
-}
-
-(async()=>{
-  let price;try{price=await fetchPrice();}catch{}
-  document.title=price?`Ξ ${Math.round(price).toLocaleString('en-US')} USD`:'Ξ —';
-  const base=price||(3000+Math.random()*500);tape=randomWalk(base);draw();
-  setInterval(async()=>{
-    try{
-      const p=await fetchPrice();
-      document.title=`Ξ ${Math.round(p).toLocaleString('en-US')} USD`;
-      if(seeded){tape=Array(LEN).fill(p);seeded=false;}
-      else{tape.push(p);tape.shift();}
-      draw();
-    }catch{console.warn('price fetch failed');}
-  },30000);
+(function(){
+  const icon=document.createElement('link');icon.rel='icon';icon.type='image/png';icon.sizes='16x16';document.head.appendChild(icon);
+  const cvs=document.createElement('canvas');cvs.width=cvs.height=16;const ctx=cvs.getContext('2d');ctx.translate(2,0);
+  const LIFETIME=180,SEED_COUNT=4,MIRROR_Y=true,MIRROR_X=false,rnd=n=>Math.floor(Math.random()*n),key=(x,y)=>(y<<4)|x;let pixels=new Set(),frame=0;
+  function seed(){pixels.clear();for(let i=0;i<SEED_COUNT;i++){const x=rnd(8),y=rnd(8);pixels.add(key(x,y));if(MIRROR_Y)pixels.add(key(x,15-y));if(MIRROR_X)pixels.add(key(15-x,y));if(MIRROR_Y&&MIRROR_X)pixels.add(key(15-x,15-y));}}
+  function grow(){const a=[...pixels],p=a[rnd(a.length)],ox=p&15,oy=p>>4,dirs=[[1,0],[-1,0],[0,1],[0,-1]],d=dirs[rnd(4)],nx=ox+d[0],ny=oy+d[1];if(nx<0||nx>15||ny<0||ny>15)return;pixels.add(key(nx,ny));if(MIRROR_Y)pixels.add(key(nx,15-ny));if(MIRROR_X)pixels.add(key(15-nx,ny));if(MIRROR_Y&&MIRROR_X)pixels.add(key(15-nx,15-ny));}
+  function draw(){ctx.clearRect(0,0,16,16);ctx.fillStyle='#000';pixels.forEach(p=>ctx.fillRect(p&15,p>>4,1,1));icon.href=cvs.toDataURL('image/png');}
+  function step(){if(frame===0)seed();if(frame<LIFETIME)grow();draw();frame=(frame+1)%(LIFETIME+1);requestAnimationFrame(step);}step();
 })();
 </script>
 </body>
