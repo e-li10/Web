@@ -5,12 +5,12 @@
   <title>Eric Li</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <!-- Cormorant Garamond -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400&family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
-  <!-- Pre-load hero to stop layout shift -->
+  <!-- Pre‑load hero to stop layout shift -->
   <link rel="preload" as="image" href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
 
   <style>
@@ -52,17 +52,24 @@
     #ticker{position:fixed;inset:0;pointer-events:none;z-index:5}
     .quote{
       position:fixed;
-      font:300 14px 'Cormorant Garamond',serif;
+      font:400 14px 'Space Grotesk','Cormorant Garamond',serif;
+      letter-spacing:.02em;
       color:var(--ink);
       animation:fadeCycle 6s ease-in-out forwards;
       white-space:nowrap;
       user-select:none;
+      background:rgba(255,255,255,.32);
+      backdrop-filter:blur(5px);
+      padding:.25em .6em;
+      border-radius:4px;
+      text-shadow:0 1px 3px rgba(0,0,0,.22);
     }
 
     @keyframes fade{to{opacity:1}}
     @keyframes fadeCycle{
       0%{opacity:0;transform:translateY(6px) scale(.94)}
-      15%{opacity:1;transform:translateY(0) scale(1)}
+      15%{opacity:1;transform:translateY(0) scale(1.05)}  /* overshoot */
+      22%{opacity:1;transform:translateY(0) scale(1)}     /* settle */
       70%{opacity:1}
       100%{opacity:0;transform:translateY(-6px) scale(1.04)}
     }
@@ -161,22 +168,20 @@
   })();
   </script>
 
-  <!-- floating top-40 quotes (filtered, edge-safe) -->
+  <!-- floating top‑40 quotes (filtered, edge‑safe) -->
   <script>
   (function(){
     const box=document.getElementById('ticker');
     const fmt=n=>n.toLocaleString('en-US',{
-      style:'currency',
-      currency:'USD',
-      maximumFractionDigits:2
+      style:'currency',currency:'USD',maximumFractionDigits:2
     });
 
-    /* broader junk / stable filter */
+    // broader junk / stable filter
     function isJunk(sym){
-      sym = sym.toUpperCase();
-      if(sym.includes('USD')) return true;                // stables & pegs
-      if(sym.includes('-'))   return true;                // chain-pegged variants
-      if(sym.startsWith('W') || sym.startsWith('ST')) return true; // wrapped / staked
+      sym=sym.toUpperCase();
+      if(sym.includes('USD')) return true;               // stables & pegs
+      if(sym.includes('-'))   return true;               // chain‑pegged variants
+      if(sym.startsWith('W')||sym.startsWith('ST')) return true; // wrapped / staked
       if(/^(DAI|FRAX|LUSD|SUSD|GUSD|PYUSD|USDP|CBBTC)$/.test(sym)) return true;
       return false;
     }
@@ -185,52 +190,49 @@
 
     async function refresh(){
       const now=Date.now();
-      if(now-lastFetch<60000 && coins.length) return;
+      if(now-lastFetch<60000&&coins.length) return;
 
       try{
-        const r = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false');
+        const r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false');
         if(!r.ok) throw new Error('list');
-        const rows = await r.json();
+        const rows=await r.json();
 
-        coins = rows
-          .filter(c => !isJunk(c.symbol))
-          .slice(0,40)
-          .map(c => ({ id:c.id, sym:c.symbol.toUpperCase() }));
+        coins=rows.filter(c=>!isJunk(c.symbol)).slice(0,40).map(c=>({id:c.id,sym:c.symbol.toUpperCase()}));
 
-        const ids = coins.map(c=>c.id).join(',');
-        const p   = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+        const ids=coins.map(c=>c.id).join(',');
+        const p=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
         if(!p.ok) throw new Error('prices');
-        priceMap = await p.json();
-        lastFetch = now;
+        priceMap=await p.json();
+        lastFetch=now;
       }catch(e){
         if(!coins.length) coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];
       }
     }
 
-    /* keep quotes away from edges + central column */
+    // place quotes away from edges + central column
     function safe(){
-      const vw = window.innerWidth,
-            vh = window.innerHeight,
-            margin = 24;
+      const vw=window.innerWidth,
+            vh=window.innerHeight,
+            margin=24;
 
-      const colLeft  = (vw - 680)/2 - 80;
-      const colRight = (vw + 680)/2 + 80;
+      const colLeft =(vw-680)/2-80,
+            colRight=(vw+680)/2+80;
 
       let x,y;
       do{
-        x = margin + Math.random()*(vw - 2*margin - 120); // 120 ≈ quote width
-      }while(x>colLeft && x<colRight);
+        x=margin+Math.random()*(vw-2*margin-120); // 120 ≈ quote width
+      }while(x>colLeft&&x<colRight);
 
-      y = margin + Math.random()*(vh - 2*margin - 40);    // 40 ≈ quote height
+      y=margin+Math.random()*(vh-2*margin-40);    // 40 ≈ quote height
       return {x,y};
     }
 
     async function drop(){
       await refresh();
-      if(!coins.length){ setTimeout(drop,6000); return; }
+      if(!coins.length){setTimeout(drop,6000);return;}
 
-      const pick  = coins[Math.floor(Math.random()*coins.length)];
-      const price = priceMap[pick.id]?.usd;
+      const pick=coins[Math.floor(Math.random()*coins.length)];
+      const price=priceMap[pick.id]?.usd;
 
       if(price){
         const span=document.createElement('span');
@@ -239,15 +241,9 @@
 
         const pos=safe();
         span.style.left=`${pos.x}px`;
-        span.style.top =`${pos.y}px`;
+        span.style.top=`${pos.y}px`;
 
         box.appendChild(span);
         setTimeout(()=>span.remove(),6000);
       }
-      setTimeout(drop,6000);
-    }
-    drop();
-  })();
-  </script>
-</body>
-</html>
+      set
