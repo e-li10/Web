@@ -76,7 +76,10 @@
   <main>
     <img id="hero" src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960" alt="Louis Lozowick, New York (1923)">
     <h1><a href="https://www.linkedin.com/in/eric-li-226850249/" target="_blank" rel="noopener">Eric Li</a></h1>
-    <div id="links"><a href="thoughts.html">Thoughts</a><a href="mailto:eric_li1@college.harvard.edu">Contact</a></div>
+    <div id="links">
+      <a href="thoughts.html">Thoughts</a>
+      <a href="mailto:eric_li1@college.harvard.edu">Contact</a>
+    </div>
     <hr class="divider">
     <div id="ticker" aria-hidden="true"></div>
   </main>
@@ -86,7 +89,11 @@
     const clk=document.getElementById('clock');
     function tick(){
       const now=new Date();
-      clk.textContent=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(now);
+      clk.textContent=new Intl.DateTimeFormat('en-US',{
+        timeZone:'America/New_York',
+        hour12:false,
+        hour:'2-digit',minute:'2-digit',second:'2-digit'
+      }).format(now);
       clk.dateTime=now.toISOString();
     }
     tick();
@@ -96,51 +103,146 @@
   <!-- animated favicon -->
   <script>
   (function(){
-    const icon=document.createElement('link');icon.rel='icon';icon.type='image/png';icon.sizes='16x16';document.head.appendChild(icon);
-    const cvs=document.createElement('canvas');cvs.width=cvs.height=16;const ctx=cvs.getContext('2d');ctx.translate(2,0);
-    const LIFETIME=180,SEED_COUNT=4,MIRROR_Y=true,MIRROR_X=false,rnd=n=>Math.floor(Math.random()*n),key=(x,y)=>(y<<4)|x;let pixels=new Set(),frame=0;
-    function seed(){pixels.clear();for(let i=0;i<SEED_COUNT;i++){const x=rnd(8),y=rnd(8);pixels.add(key(x,y));if(MIRROR_Y)pixels.add(key(x,15-y));if(MIRROR_X)pixels.add(key(15-x,y));if(MIRROR_Y&&MIRROR_X)pixels.add(key(15-x,15-y));}}
-    function grow(){const a=[...pixels],p=a[rnd(a.length)],ox=p&15,oy=p>>4,dirs=[[1,0],[-1,0],[0,1],[0,-1]],d=dirs[rnd(4)],nx=ox+d[0],ny=oy+d[1];if(nx<0||nx>15||ny<0||ny>15)return;pixels.add(key(nx,ny));if(MIRROR_Y)pixels.add(key(nx,15-ny));if(MIRROR_X)pixels.add(key(15-nx,ny));if(MIRROR_Y&&MIRROR_X)pixels.add(key(15-nx,15-ny));}
-    function draw(){ctx.clearRect(0,0,16,16);ctx.fillStyle='#000';pixels.forEach(p=>ctx.fillRect(p&15,p>>4,1,1));icon.href=cvs.toDataURL('image/png');}
-    function step(){if(frame===0)seed();if(frame<LIFETIME)grow();draw();frame=(frame+1)%(LIFETIME+1);requestAnimationFrame(step);}step();
+    const icon=document.createElement('link');
+    icon.rel='icon';icon.type='image/png';icon.sizes='16x16';
+    document.head.appendChild(icon);
+
+    const cvs=document.createElement('canvas');
+    cvs.width=cvs.height=16;
+    const ctx=cvs.getContext('2d');
+    ctx.translate(2,0);
+
+    const LIFETIME=180,SEED_COUNT=4,
+          MIRROR_Y=true,MIRROR_X=false,
+          rnd=n=>Math.floor(Math.random()*n),
+          key=(x,y)=>(y<<4)|x;
+
+    let pixels=new Set(),frame=0;
+
+    function seed(){
+      pixels.clear();
+      for(let i=0;i<SEED_COUNT;i++){
+        const x=rnd(8),y=rnd(8);
+        pixels.add(key(x,y));
+        if(MIRROR_Y) pixels.add(key(x,15-y));
+        if(MIRROR_X) pixels.add(key(15-x,y));
+        if(MIRROR_Y&&MIRROR_X) pixels.add(key(15-x,15-y));
+      }
+    }
+
+    function grow(){
+      const a=[...pixels],p=a[rnd(a.length)];
+      const ox=p&15,oy=p>>4,
+            dirs=[[1,0],[-1,0],[0,1],[0,-1]],
+            d=dirs[rnd(4)],
+            nx=ox+d[0],ny=oy+d[1];
+      if(nx<0||nx>15||ny<0||ny>15) return;
+      pixels.add(key(nx,ny));
+      if(MIRROR_Y) pixels.add(key(nx,15-ny));
+      if(MIRROR_X) pixels.add(key(15-nx,ny));
+      if(MIRROR_Y&&MIRROR_X) pixels.add(key(15-nx,15-ny));
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,16,16);
+      ctx.fillStyle='#000';
+      pixels.forEach(p=>ctx.fillRect(p&15,p>>4,1,1));
+      icon.href=cvs.toDataURL('image/png');
+    }
+
+    function step(){
+      if(frame===0) seed();
+      if(frame<LIFETIME) grow();
+      draw();
+      frame=(frame+1)%(LIFETIME+1);
+      requestAnimationFrame(step);
+    }
+    step();
   })();
   </script>
 
-  <!-- floating top‑40 quotes (no stables | no wrapped) -->
+  <!-- floating top-40 quotes (filtered, edge-safe) -->
   <script>
   (function(){
     const box=document.getElementById('ticker');
-    const fmt=n=>n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
-    const EXCLUDE=/^(usd|usdt|usdc|busd|dai|usdp|usdd|tusd|fdusd)$/i; // stablecoins
+    const fmt=n=>n.toLocaleString('en-US',{
+      style:'currency',
+      currency:'USD',
+      maximumFractionDigits:2
+    });
+
+    /* broader junk / stable filter */
+    function isJunk(sym){
+      sym = sym.toUpperCase();
+      if(sym.includes('USD')) return true;                // stables & pegs
+      if(sym.includes('-'))   return true;                // chain-pegged variants
+      if(sym.startsWith('W') || sym.startsWith('ST')) return true; // wrapped / staked
+      if(/^(DAI|FRAX|LUSD|SUSD|GUSD|PYUSD|USDP)$/.test(sym)) return true;
+      return false;
+    }
+
     let coins=[],priceMap={},lastFetch=0;
 
     async function refresh(){
       const now=Date.now();
-      if(now-lastFetch<60000&&coins.length)return;
+      if(now-lastFetch<60000 && coins.length) return;
+
       try{
-        const r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false');
-        if(!r.ok)throw new Error('list');
-        const rows=await r.json();
-        coins=rows.filter(c=>{const s=c.symbol.toUpperCase();return !EXCLUDE.test(s)&&!s.startsWith('W')&&!s.includes('STETH');}).slice(0,40).map(c=>({id:c.id,sym:c.symbol.toUpperCase()}));
-        const ids=coins.map(c=>c.id).join(',');
-        const p=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
-        if(!p.ok)throw new Error('prices');
-        priceMap=await p.json();
-        lastFetch=now;
-      }catch(e){if(!coins.length)coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];}
+        const r = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false');
+        if(!r.ok) throw new Error('list');
+        const rows = await r.json();
+
+        coins = rows
+          .filter(c => !isJunk(c.symbol))
+          .slice(0,40)
+          .map(c => ({ id:c.id, sym:c.symbol.toUpperCase() }));
+
+        const ids = coins.map(c=>c.id).join(',');
+        const p   = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+        if(!p.ok) throw new Error('prices');
+        priceMap = await p.json();
+        lastFetch = now;
+      }catch(e){
+        if(!coins.length) coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];
+      }
     }
 
-    function safe(){const vw=window.innerWidth,vh=window.innerHeight,safeLeft=(vw-680)/2-80,safeRight=(vw+680)/2+80;let x,y;do{x=Math.random()*(vw-120);}while(x>safeLeft&&x<safeRight);y=80+Math.random()*(vh-160);return{x,y};}
+    /* keep quotes away from edges + central column */
+    function safe(){
+      const vw = window.innerWidth,
+            vh = window.innerHeight,
+            margin = 24;
+
+      const colLeft  = (vw - 680)/2 - 80;
+      const colRight = (vw + 680)/2 + 80;
+
+      let x,y;
+      do{
+        x = margin + Math.random()*(vw - 2*margin - 120); // 120 ≈ quote width
+      }while(x>colLeft && x<colRight);
+
+      y = margin + Math.random()*(vh - 2*margin - 40);    // 40 ≈ quote height
+      return {x,y};
+    }
 
     async function drop(){
       await refresh();
-      if(!coins.length){setTimeout(drop,6000);return;}
-      const pick=coins[Math.floor(Math.random()*coins.length)];
-      const price=priceMap[pick.id]?.usd;
+      if(!coins.length){ setTimeout(drop,6000); return; }
+
+      const pick  = coins[Math.floor(Math.random()*coins.length)];
+      const price = priceMap[pick.id]?.usd;
+
       if(price){
-        const span=document.createElement('span');span.className='quote';span.textContent=`${pick.sym} ${fmt(price)}`;
-        const pos=safe();span.style.left=`${pos.x}px`;span.style.top=`${pos.y}px`;
-        box.appendChild(span);setTimeout(()=>span.remove(),6000);
+        const span=document.createElement('span');
+        span.className='quote';
+        span.textContent=`${pick.sym} ${fmt(price)}`;
+
+        const pos=safe();
+        span.style.left=`${pos.x}px`;
+        span.style.top =`${pos.y}px`;
+
+        box.appendChild(span);
+        setTimeout(()=>span.remove(),6000);
       }
       setTimeout(drop,6000);
     }
