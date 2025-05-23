@@ -49,7 +49,7 @@
       position:fixed;
       font:400 12px 'Cormorant Garamond',serif;
       letter-spacing:.03em;color:var(--ink);
-      animation:fadeCycle 3s ease-out forwards;         /* full cycle = 3 s   */
+      animation:fadeCycle 3s ease-out forwards;
       white-space:nowrap;user-select:none;
       background:rgba(255,255,255,.28);backdrop-filter:blur(5px);
       padding:.23em .55em;border-radius:4px;
@@ -59,12 +59,12 @@
 
     @keyframes fade{to{opacity:1}}
 
-    /* 0–2 s: fully visible, 2–3 s: glide away */
+    /* 0–2 s visible, 2–3 s fade-out */
     @keyframes fadeCycle{
       0%   {opacity:0;transform:translateY(4px)}
-      8%   {opacity:1;transform:translateY(0)}      /* quick fade-in        */
-      67%  {opacity:1;transform:translateY(0)}      /* solid for 2 seconds  */
-      100% {opacity:0;transform:translateY(-4px)}   /* 1-second fade-out    */
+      8%   {opacity:1;transform:translateY(0)}
+      67%  {opacity:1;transform:translateY(0)}
+      100% {opacity:0;transform:translateY(-4px)}
     }
 
     h1 a,#links a{color:var(--ink)!important;text-decoration:none!important}
@@ -121,18 +121,23 @@
   <script>
   (function(){
     const box=document.getElementById('ticker');
-    const fmt=n=>n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
+
+    const fmt=n=>n.toLocaleString('en-US',{
+      style:'currency',currency:'USD',maximumFractionDigits:2
+    });
+
     const junk=s=>{
       s=s.toUpperCase();
       return s.includes('USD')||s.includes('-')||s.startsWith('W')||s.startsWith('ST')||
              /^(DAI|FRAX|LUSD|SUSD|GUSD|PYUSD|USDP|CBBTC)$/.test(s);
     };
 
-    let coins=[],prices={},last=0;
+    let coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];
+    let prices={},lastFetch=0;
 
     async function refresh(){
       const now=Date.now();
-      if(now-last<60000&&coins.length) return;
+      if(now-lastFetch<60000&&coins.length>2) return;
       try{
         const r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false');
         const rows=await r.json();
@@ -142,10 +147,8 @@
         const ids=coins.map(c=>c.id).join(',');
         const p=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
         prices=await p.json();
-        last=now;
-      }catch{
-        if(!coins.length) coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];
-      }
+        lastFetch=now;
+      }catch{/* fall back to BTC/ETH if network slow */}
     }
 
     function safe(){
@@ -156,32 +159,27 @@
         const x=m+Math.random()*xMax;
         if(x<colL||x>colR) return {x,y:m+Math.random()*yMax};
       }
-      return {x:m,y:m}; // fallback
+      return {x:m,y:m};
     }
 
-    let lastFrame=0;
-    async function loop(ts){
-      if(ts-lastFrame>=2000){           // spawn every 2 s
-        lastFrame=ts;
-        await refresh();
-        if(coins.length){
-          const coin=coins[Math.random()*coins.length|0];
-          const price=prices[coin.id]?.usd;
-          if(price!==undefined){
-            const span=document.createElement('span');
-            span.className='quote';
-            span.textContent=`${coin.sym} ${fmt(price)}`;
-            const pos=safe();
-            span.style.left=`${pos.x}px`;
-            span.style.top =`${pos.y}px`;
-            box.appendChild(span);
-            setTimeout(()=>span.remove(),3000); // matches 3-s animation
-          }
-        }
-      }
-      requestAnimationFrame(loop);
+    async function spawn(){
+      await refresh();
+      const coin=coins[Math.random()*coins.length|0];
+      const price=prices[coin.id]?.usd;
+      if(price===undefined) return;
+      const span=document.createElement('span');
+      span.className='quote';
+      span.textContent=`${coin.sym} ${fmt(price)}`;
+      const pos=safe();
+      span.style.left=`${pos.x}px`;
+      span.style.top =`${pos.y}px`;
+      box.appendChild(span);
+      setTimeout(()=>span.remove(),3000); // match animation length
     }
-    requestAnimationFrame(loop);
+
+    /* first ticker ASAP, then every 3 s */
+    spawn();
+    setInterval(spawn,3000);
   })();
   </script>
 </body>
