@@ -5,13 +5,15 @@
 <title>Eric Li, Thoughts</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<!-- Cormorant Garamond -->
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+
 body{
   font-family:'Cormorant Garamond',serif;
   color:#444;
@@ -32,6 +34,22 @@ body{
 main{max-width:680px;margin:100px auto 0;padding:0 24px;text-align:left}
 .post{font-size:22px;font-weight:300;margin-bottom:18px}
 
+/* ticker */
+#ticker{
+  position:fixed;
+  bottom:20px;                    /* adjust if needed */
+  left:50%;
+  transform:translateX(-50%);
+  font:400 18px 'Space Grotesk',sans-serif;
+  letter-spacing:.4px;
+  white-space:nowrap;
+  pointer-events:none;
+  user-select:none;
+
+  opacity:0;                      /* will flip to 1 immediately */
+  transition:opacity .8s ease;    /* pure fade (no slide) */
+}
+
 @keyframes fade{to{opacity:1}}
 </style>
 </head>
@@ -45,7 +63,10 @@ main{max-width:680px;margin:100px auto 0;padding:0 24px;text-align:left}
   <div class="post">3. Proof-of-Compute (TBD)</div>
 </main>
 
+<div id="ticker"></div>
+
 <script>
+/* digital clock */
 const clk=document.getElementById('clock');
 function tick(){
   const now=new Date();
@@ -70,6 +91,45 @@ setInterval(tick,1000);
   function draw(){ctx.clearRect(0,0,16,16);ctx.fillStyle='#000';pixels.forEach(p=>ctx.fillRect(p&15,p>>4,1,1));icon.href=cvs.toDataURL('image/png');}
   function step(){if(frame===0)seed();if(frame<LIFETIME)grow();draw();frame=(frame+1)%(LIFETIME+1);requestAnimationFrame(step);}step();
 })();
+</script>
+
+<!-- ticker logic -->
+<script defer>
+const tickers=[
+  'BTC 111 200 USD',
+  'ETH 5 420 USD',
+  'SOL 166.3 USD',
+  'DOGE 0.42 USD'
+];
+
+const DISPLAY   = 2000;  // ms fully visible
+const FADE_TIME =  800;  // ms fade duration
+
+const el    = document.getElementById('ticker');
+let idx     = 0;
+let first   = true;
+
+function cycle(){
+  el.textContent=tickers[idx];
+
+  if(first){
+    el.style.opacity=1;         // show instantly
+    first=false;
+  }else{
+    requestAnimationFrame(()=>el.style.opacity=1);
+  }
+
+  setTimeout(()=>{
+    el.style.opacity=0;         // begin fade-out
+
+    setTimeout(()=>{
+      idx=(idx+1)%tickers.length;
+      cycle();
+    },FADE_TIME);
+  },DISPLAY);
+}
+
+cycle();
 </script>
 </body>
 </html>
