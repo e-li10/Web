@@ -17,6 +17,7 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{--ink:#000;--stack:680px;--top:35px}
+
     body{
       font-family:'Cormorant Garamond',serif;
       color:var(--ink);
@@ -48,7 +49,7 @@
       position:fixed;
       font:400 12px 'Cormorant Garamond',serif;
       letter-spacing:.03em;color:var(--ink);
-      animation:fadeCycle 2s ease-out forwards;
+      animation:fadeCycle 3s ease-out forwards;         /* full cycle = 3 s   */
       white-space:nowrap;user-select:none;
       background:rgba(255,255,255,.28);backdrop-filter:blur(5px);
       padding:.23em .55em;border-radius:4px;
@@ -57,11 +58,13 @@
     }
 
     @keyframes fade{to{opacity:1}}
+
+    /* 0–2 s: fully visible, 2–3 s: glide away */
     @keyframes fadeCycle{
-      0%  {opacity:0;transform:translateY(4px)}
-      12% {opacity:1;transform:translateY(0)}
-      85% {opacity:1;transform:translateY(0)}
-      100%{opacity:0;transform:translateY(-4px)}
+      0%   {opacity:0;transform:translateY(4px)}
+      8%   {opacity:1;transform:translateY(0)}      /* quick fade-in        */
+      67%  {opacity:1;transform:translateY(0)}      /* solid for 2 seconds  */
+      100% {opacity:0;transform:translateY(-4px)}   /* 1-second fade-out    */
     }
 
     h1 a,#links a{color:var(--ink)!important;text-decoration:none!important}
@@ -119,35 +122,46 @@
   (function(){
     const box=document.getElementById('ticker');
     const fmt=n=>n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
-    const junk=s=>{s=s.toUpperCase();return s.includes('USD')||s.includes('-')||s.startsWith('W')||s.startsWith('ST')||
-                   /^(DAI|FRAX|LUSD|SUSD|GUSD|PYUSD|USDP|CBBTC)$/.test(s);}
+    const junk=s=>{
+      s=s.toUpperCase();
+      return s.includes('USD')||s.includes('-')||s.startsWith('W')||s.startsWith('ST')||
+             /^(DAI|FRAX|LUSD|SUSD|GUSD|PYUSD|USDP|CBBTC)$/.test(s);
+    };
+
     let coins=[],prices={},last=0;
 
     async function refresh(){
-      const now=Date.now();if(now-last<60000&&coins.length)return;
+      const now=Date.now();
+      if(now-last<60000&&coins.length) return;
       try{
         const r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false');
         const rows=await r.json();
-        coins=rows.filter(c=>!junk(c.symbol)).slice(0,40).map(c=>({id:c.id,sym:c.symbol.toUpperCase()}));
+        coins=rows.filter(c=>!junk(c.symbol))
+                  .slice(0,40)
+                  .map(c=>({id:c.id,sym:c.symbol.toUpperCase()}));
         const ids=coins.map(c=>c.id).join(',');
         const p=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
-        prices=await p.json();last=now;
-      }catch{if(!coins.length)coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];}
+        prices=await p.json();
+        last=now;
+      }catch{
+        if(!coins.length) coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];
+      }
     }
 
     function safe(){
-      const vw=innerWidth,vh=innerHeight,m=24,xMax=Math.max(vw-2*m-120,1),yMax=Math.max(vh-2*m-40,1);
-      let colL=Math.max((vw-680)/2-80,0),colR=Math.min((vw+680)/2+80,vw);
+      const vw=innerWidth,vh=innerHeight,m=24,
+            xMax=Math.max(vw-2*m-120,1),yMax=Math.max(vh-2*m-40,1);
+      const colL=Math.max((vw-680)/2-80,0),colR=Math.min((vw+680)/2+80,vw);
       for(let t=0;t<20;t++){
         const x=m+Math.random()*xMax;
-        if(x<colL||x>colR)return{x,y:m+Math.random()*yMax};
+        if(x<colL||x>colR) return {x,y:m+Math.random()*yMax};
       }
-      return {x:m,y:m};/* fallback */
+      return {x:m,y:m}; // fallback
     }
 
     let lastFrame=0;
     async function loop(ts){
-      if(ts-lastFrame>=2000){
+      if(ts-lastFrame>=2000){           // spawn every 2 s
         lastFrame=ts;
         await refresh();
         if(coins.length){
@@ -157,8 +171,11 @@
             const span=document.createElement('span');
             span.className='quote';
             span.textContent=`${coin.sym} ${fmt(price)}`;
-            const pos=safe();span.style.left=`${pos.x}px`;span.style.top=`${pos.y}px`;
-            box.appendChild(span);setTimeout(()=>span.remove(),2000);
+            const pos=safe();
+            span.style.left=`${pos.x}px`;
+            span.style.top =`${pos.y}px`;
+            box.appendChild(span);
+            setTimeout(()=>span.remove(),3000); // matches 3-s animation
           }
         }
       }
