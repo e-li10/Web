@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
-  <!-- Pre-load hero to stop layout shift -->
+  <!-- Pre-load hero -->
   <link rel="preload" as="image"
         href="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960">
 
@@ -38,11 +38,8 @@
     }
     .divider{width:70%;margin:6px auto 0;border:none;border-top:1px solid var(--ink)}
     #clock{
-      position:fixed;
-      top:12px;
-      right:16px;
-      font:400 16px 'Cormorant Garamond',serif;
-      color:var(--ink);
+      position:fixed;top:12px;right:16px;
+      font:400 16px 'Cormorant Garamond',serif;color:var(--ink);
     }
 
     /* floating quotes */
@@ -50,16 +47,13 @@
     .quote{
       position:fixed;
       font:400 12px 'Cormorant Garamond',serif;
-      letter-spacing:.03em;
-      color:var(--ink);
-      animation:fadeCycle 3s ease-out forwards;
-      white-space:nowrap;
-      user-select:none;
-      background:rgba(255,255,255,.28);
-      backdrop-filter:blur(5px);
-      padding:.23em .55em;
-      border-radius:4px;
+      letter-spacing:.03em;color:var(--ink);
+      animation:fadeCycle 2s ease-out forwards;
+      white-space:nowrap;user-select:none;
+      background:rgba(255,255,255,.28);backdrop-filter:blur(5px);
+      padding:.23em .55em;border-radius:4px;
       text-shadow:0 1px 3px rgba(0,0,0,.18);
+      will-change:opacity,transform;
     }
 
     @keyframes fade{to{opacity:1}}
@@ -70,11 +64,7 @@
       100%{opacity:0;transform:translateY(-4px)}
     }
 
-    h1 a,
-    #links a{
-      color:var(--ink)!important;
-      text-decoration:none!important;
-    }
+    h1 a,#links a{color:var(--ink)!important;text-decoration:none!important}
   </style>
 </head>
 <body>
@@ -84,12 +74,8 @@
     <img id="hero"
          src="https://ids.si.edu/ids/deliveryService?id=SAAM-1967.107.2_1&max=960"
          alt="Louis Lozowick, New York (1923)">
-    <h1>
-      <a href="https://www.linkedin.com/in/eric-li-226850249/"
-         target="_blank" rel="noopener">
-        Eric Li
-      </a>
-    </h1>
+    <h1><a href="https://www.linkedin.com/in/eric-li-226850249/"
+           target="_blank" rel="noopener">Eric Li</a></h1>
 
     <div id="links">
       <a href="thoughts.html">Thoughts</a>
@@ -102,187 +88,83 @@
 
   <!-- live clock -->
   <script>
-    const clk = document.getElementById('clock');
-    function tick() {
-      const now = new Date();
-      clk.textContent = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/New_York',
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }).format(now);
-      clk.dateTime = now.toISOString();
-    }
-    tick();
-    setInterval(tick, 1000);
+    const clk=document.getElementById('clock');
+    const tick=()=>{const n=new Date();
+      clk.textContent=new Intl.DateTimeFormat('en-US',{
+        timeZone:'America/New_York',hour12:false,
+        hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(n);
+      clk.dateTime=n.toISOString();};
+    tick();setInterval(tick,1000);
   </script>
 
-  <!-- animated favicon (Rorschach blot) -->
+  <!-- animated favicon -->
   <script>
-  (function () {
-    const icon = document.createElement('link');
-    icon.rel   = 'icon';
-    icon.type  = 'image/png';
-    icon.sizes = '16x16';
-    document.head.appendChild(icon);
-
-    const cvs = document.createElement('canvas');
-    cvs.width = cvs.height = 16;
-    const ctx = cvs.getContext('2d');
-    ctx.translate(2, 0);
-
-    const LIFETIME   = 180;
-    const SEED_COUNT = 4;
-    const MIRROR_Y   = true;
-    const MIRROR_X   = false;
-
-    const rnd = n   => Math.floor(Math.random() * n);
-    const key = (x, y) => (y << 4) | x;
-
-    let pixels = new Set();
-    let frame  = 0;
-
-    function seed() {
-      pixels.clear();
-      for (let i = 0; i < SEED_COUNT; i++) {
-        const x = rnd(8), y = rnd(8);
-        pixels.add(key(x, y));
-        if (MIRROR_Y)            pixels.add(key(x, 15 - y));
-        if (MIRROR_X)            pixels.add(key(15 - x, y));
-        if (MIRROR_Y && MIRROR_X) pixels.add(key(15 - x, 15 - y));
-      }
-    }
-
-    function grow() {
-      const arr = [...pixels];
-      const p   = arr[rnd(arr.length)];
-      const ox  = p & 15;
-      const oy  = p >> 4;
-      const d   = [[1,0], [-1,0], [0,1], [0,-1]][rnd(4)];
-      const nx  = ox + d[0];
-      const ny  = oy + d[1];
-      if (nx < 0 || nx > 15 || ny < 0 || ny > 15) return;
-      pixels.add(key(nx, ny));
-      if (MIRROR_Y)            pixels.add(key(nx, 15 - ny));
-      if (MIRROR_X)            pixels.add(key(15 - nx, ny));
-      if (MIRROR_Y && MIRROR_X) pixels.add(key(15 - nx, 15 - ny));
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, 16, 16);
-      ctx.fillStyle = '#000';
-      pixels.forEach(p => ctx.fillRect(p & 15, p >> 4, 1, 1));
-      icon.href = cvs.toDataURL('image/png');
-    }
-
-    function step() {
-      if (frame === 0) seed();
-      if (frame < LIFETIME) grow();
-      draw();
-      frame = (frame + 1) % (LIFETIME + 1);
-      requestAnimationFrame(step);
-    }
-    step();
+  (function(){
+    const link=document.createElement('link');
+    link.rel='icon';link.type='image/png';link.sizes='16x16';document.head.appendChild(link);
+    const c=document.createElement('canvas');c.width=c.height=16;
+    const ctx=c.getContext('2d');ctx.translate(2,0);
+    const L=180,S=4,MY=true,r=r=>Math.floor(Math.random()*r),k=(x,y)=>(y<<4)|x;
+    let p=new Set,f=0;
+    const seed=()=>{p.clear();for(let i=0;i<S;i++){const x=r(8),y=r(8);p.add(k(x,y));if(MY)p.add(k(x,15-y));}};
+    const grow=()=>{const a=[...p],q=a[r(a.length)],ox=q&15,oy=q>>4,[dx,dy]=[[1,0],[-1,0],[0,1],[0,-1]][r(4)];
+      const nx=ox+dx,ny=oy+dy;if(nx<0||nx>15||ny<0||ny>15)return;p.add(k(nx,ny));if(MY)p.add(k(nx,15-ny));};
+    const draw=()=>{ctx.clearRect(0,0,16,16);ctx.fillStyle='#000';p.forEach(q=>ctx.fillRect(q&15,q>>4,1,1));link.href=c.toDataURL()};
+    (function loop(){if(f===0)seed();if(f<L)grow();draw();f=(f+1)%(L+1);requestAnimationFrame(loop)})();
   })();
   </script>
 
   <!-- floating tickers -->
   <script>
-  (function () {
-    const box = document.getElementById('ticker');
-    const fmt = n => n.toLocaleString('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2
-    });
+  (function(){
+    const box=document.getElementById('ticker');
+    const fmt=n=>n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
+    const junk=s=>{s=s.toUpperCase();return s.includes('USD')||s.includes('-')||s.startsWith('W')||s.startsWith('ST')||
+                   /^(DAI|FRAX|LUSD|SUSD|GUSD|PYUSD|USDP|CBBTC)$/.test(s);}
+    let coins=[],prices={},last=0;
 
-    function isJunk(sym) {
-      sym = sym.toUpperCase();
-      if (sym.includes('USD')   || sym.includes('-')) return true;
-      if (sym.startsWith('W')   || sym.startsWith('ST')) return true;
-      if (/^(DAI|FRAX|LUSD|SUSD|GUSD|PYUSD|USDP|CBBTC)$/.test(sym)) return true;
-      return false;
+    async function refresh(){
+      const now=Date.now();if(now-last<60000&&coins.length)return;
+      try{
+        const r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false');
+        const rows=await r.json();
+        coins=rows.filter(c=>!junk(c.symbol)).slice(0,40).map(c=>({id:c.id,sym:c.symbol.toUpperCase()}));
+        const ids=coins.map(c=>c.id).join(',');
+        const p=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+        prices=await p.json();last=now;
+      }catch{if(!coins.length)coins=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'}];}
     }
 
-    let coins     = [];
-    let priceMap  = {};
-    let lastFetch = 0;
-
-    async function refresh() {
-      const now = Date.now();
-      if (now - lastFetch < 60_000 && coins.length) return;
-
-      try {
-        const r = await fetch(
-          'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false'
-        );
-        if (!r.ok) throw new Error('list');
-        const rows = await r.json();
-        coins = rows
-          .filter(c => !isJunk(c.symbol))
-          .slice(0, 40)
-          .map(c => ({ id: c.id, sym: c.symbol.toUpperCase() }));
-
-        const ids = coins.map(c => c.id).join(',');
-        const p   = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
-        );
-        if (!p.ok) throw new Error('prices');
-        priceMap  = await p.json();
-        lastFetch = now;
-      } catch {
-        if (!coins.length)
-          coins = [
-            { id: 'bitcoin',  sym: 'BTC' },
-            { id: 'ethereum', sym: 'ETH' }
-          ];
+    function safe(){
+      const vw=innerWidth,vh=innerHeight,m=24,xMax=Math.max(vw-2*m-120,1),yMax=Math.max(vh-2*m-40,1);
+      let colL=Math.max((vw-680)/2-80,0),colR=Math.min((vw+680)/2+80,vw);
+      for(let t=0;t<20;t++){
+        const x=m+Math.random()*xMax;
+        if(x<colL||x>colR)return{x,y:m+Math.random()*yMax};
       }
+      return {x:m,y:m};/* fallback */
     }
 
-    function safe() {
-      const vw     = window.innerWidth;
-      const vh     = window.innerHeight;
-      const margin = 24;
-
-      // clamp “no-fly” column to viewport
-      let colLeft  = (vw - 680) / 2 - 80;
-      let colRight = (vw + 680) / 2 + 80;
-      colLeft  = Math.max(colLeft, 0);
-      colRight = Math.min(colRight, vw);
-
-      let tries = 20;
-      let x;
-      do {
-        x = margin + Math.random() * (vw - 2 * margin - 120);
-      } while (--tries && x > colLeft && x < colRight);
-      const y = margin + Math.random() * (vh - 2 * margin - 40);
-      return { x, y };
-    }
-
-    async function drop() {
-      await refresh();
-      if (!coins.length) {
-        setTimeout(drop, 3000);
-        return;
+    let lastFrame=0;
+    async function loop(ts){
+      if(ts-lastFrame>=2000){
+        lastFrame=ts;
+        await refresh();
+        if(coins.length){
+          const coin=coins[Math.random()*coins.length|0];
+          const price=prices[coin.id]?.usd;
+          if(price!==undefined){
+            const span=document.createElement('span');
+            span.className='quote';
+            span.textContent=`${coin.sym} ${fmt(price)}`;
+            const pos=safe();span.style.left=`${pos.x}px`;span.style.top=`${pos.y}px`;
+            box.appendChild(span);setTimeout(()=>span.remove(),2000);
+          }
+        }
       }
-
-      const pick  = coins[Math.random() * coins.length | 0];
-      const price = priceMap[pick.id]?.usd;
-      if (price !== undefined) {
-        const span = document.createElement('span');
-        span.className   = 'quote';
-        span.textContent = `${pick.sym} ${fmt(price)}`;
-        const pos = safe();
-        span.style.left = `${pos.x}px`;
-        span.style.top  = `${pos.y}px`;
-        box.appendChild(span);
-        setTimeout(() => span.remove(), 3000);
-      }
-      setTimeout(drop, 3000);
+      requestAnimationFrame(loop);
     }
-
-    drop();
+    requestAnimationFrame(loop);
   })();
   </script>
 </body>
