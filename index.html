@@ -55,7 +55,7 @@
 
     const cvs=document.createElement('canvas');cvs.width=cvs.height=16;const ctx=cvs.getContext('2d');ctx.translate(2,0);
 
-    const INTERVAL=120,LIFETIME=180,SEED_COUNT=4,MIRROR_Y=true,MIRROR_X=false;
+    const INTERVAL=60,LIFETIME=180,SEED_COUNT=4,MIRROR_Y=true,MIRROR_X=false;
     const rnd=n=>Math.floor(Math.random()*n);
     const key=(x,y)=>(y<<4)|x;
 
