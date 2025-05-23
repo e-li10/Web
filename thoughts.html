@@ -9,7 +9,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -34,22 +33,6 @@ body{
 main{max-width:680px;margin:100px auto 0;padding:0 24px;text-align:left}
 .post{font-size:22px;font-weight:300;margin-bottom:18px}
 
-/* ticker */
-#ticker{
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  font:400 18px 'Space Grotesk',sans-serif;
-  letter-spacing:.4px;
-  white-space:nowrap;
-  pointer-events:none;
-  user-select:none;
-
-  opacity:0;                    /* start invisible */
-  transition:opacity .8s ease;  /* pure fade (no slide) */
-}
-
 @keyframes fade{to{opacity:1}}
 </style>
 </head>
@@ -62,8 +45,6 @@ main{max-width:680px;margin:100px auto 0;padding:0 24px;text-align:left}
   <div class="post">2. Pricing Truth via Oracles (05/25)</div>
   <div class="post">3. Proof-of-Compute (TBD)</div>
 </main>
-
-<div id="ticker"></div>
 
 <script>
 /* digital clock */
@@ -132,41 +113,6 @@ setInterval(tick,1000);
   }
   step();
 })();
-</script>
-
-<!-- ticker logic -->
-<script defer>
-const tickers=[
-  'BTC 111 200 USD',
-  'ETH 5 420 USD',
-  'SOL 166.3 USD',
-  'DOGE 0.42 USD'
-];
-
-const DISPLAY   = 2000;  // ms fully visible after fade-in completes
-const FADE      =  800;  // ms for each fade (in + out)
-
-const el  = document.getElementById('ticker');
-let idx   = 0;
-
-function cycle(){
-  el.textContent = tickers[idx];
-  el.style.opacity = 0;                 // reset
-  requestAnimationFrame(()=> el.style.opacity = 1);  // fade-in
-
-  /*  fade-in (FADE)  +  full-visibility (DISPLAY)  */
-  setTimeout(()=>{
-    el.style.opacity = 0;               // start fade-out
-
-    /* after fade-out ends, switch to next ticker */
-    setTimeout(()=>{
-      idx = (idx + 1) % tickers.length;
-      cycle();
-    }, FADE);
-  }, DISPLAY + FADE);
-}
-
-cycle();   // first ticker starts as soon as JS runs
 </script>
 </body>
 </html>
